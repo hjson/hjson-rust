@@ -1,86 +1,61 @@
-Serde JSON Serialization Library
-================================
+# hjson-rust
 
-[![Build status](https://api.travis-ci.org/serde-rs/json.png)](https://travis-ci.org/serde-rs/json)
-[![Coverage Status](https://coveralls.io/repos/serde-rs/json/badge.svg?branch=master&service=github)](https://coveralls.io/github/serde-rs/json?branch=master)
-[![Latest Version](https://img.shields.io/crates/v/serde_json.svg)](https://crates.io/crates/serde\_json)
+[![Build Status](https://img.shields.io/travis/laktak/hjson-rust.svg?style=flat-square)](http://travis-ci.org/laktak/hjson-rust)
+[![crate](https://img.shields.io/crates/v/serde_hjson.svg)](https://crates.io/crates/serde\_hjson)
 
-[Documentation](https://serde-rs.github.io/json/serde_json)
+![Hjson Intro](http://hjson.org/hjson1.gif)
 
-This crate is a Rust library for parsing and generating the
-[JSON](http://json.org) (JavaScript Object Notation) file format. It is built
-upon [Serde](https://github.com/serde-rs/serde), a high performance generic
-serialization framework.
+```
+{
+  # specify rate in requests/second (because comments are helpful!)
+  rate: 1000
 
-Installation
-============
+  // prefer c-style comments?
+  /* feeling old fashioned? */
 
-This crate works with Cargo and can be found on
-[crates.io](https://crates.io/crates/serde_json) with a `Cargo.toml` like:
+  # did you notice that rate doesn't need quotes?
+  hey: look ma, no quotes for strings either!
+
+  # best of all
+  notice: []
+  anything: ?
+
+  # yes, commas are optional!
+}
+```
+
+The Rust implementation of Hjson is based on the [Serde JSON Serialization Library](https://github.com/serde-rs/json). For other platforms see [hjson.org](http://hjson.org).
+
+This crate is a Rust library for parsing and generating Human JSON [Hjson](http://hjson.org). It is built upon [Serde](https://github.com/serde-rs/serde), a high performance generic serialization framework.
+
+# Install
+
+This crate works with Cargo and can be found on [crates.io](https://crates.io/crates/serde_hjson) with a `Cargo.toml` like:
 
 ```toml
 [dependencies]
 serde = "*"
-serde_json = "*"
+serde_hjson = "*"
 ```
 
-Using Serde JSON
-================
-
-`serde_json` is very simple to use out of the box:
+# Usage
 
 ```rust
 extern crate serde;
-extern crate serde_json;
+extern crate serde_hjson;
 
-use std::collections::BTreeMap;
+use serde_hjson::Map;
 
 fn main() {
-    let mut map = BTreeMap::new();
+    let mut map = Map::new();
     map.insert("x".to_string(), 1.0);
     map.insert("y".to_string(), 2.0);
 
-    let s = serde_json::to_string(&map).unwrap();
+    let s = serde_hjson::to_string(&map).unwrap();
     assert_eq!(s, "{\"x\":1,\"y\":2}");
 
-    let deserialized_map: BTreeMap<String, f64> = serde_json::from_str(&s).unwrap();
+    let deserialized_map: Map<String, f64> = serde_hjson::from_str(&s).unwrap();
     assert_eq!(map, deserialized_map);
 }
 ```
 
-It also can be used with Serde's automatic serialization library,
-`serde_macros`. First add this to `Cargo.toml`:
-
-```toml
-[dependencies]
-...
-serde = "*"
-serde_macros = "*"
-...
-```
-
-Then run:
-
-```rust
-#![feature(custom_derive, plugin)]
-#![plugin(serde_macros)]
-
-extern crate serde;
-extern crate serde_json;
-
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
-struct Point {
-    x: f64,
-    y: f64,
-}
-
-fn main() {
-    let point = Point { x: 1.0, y: 2.0 };
-
-    let s = serde_json::to_string(&point).unwrap();
-    assert_eq!(s, "{\"x\":1,\"y\":2}");
-
-    let deserialized_point: Point = serde_json::from_str(&s).unwrap();
-    assert_eq!(point, deserialized_point);
-}
-```
