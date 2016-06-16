@@ -28,6 +28,15 @@ The Rust implementation of Hjson is based on the [Serde JSON Serialization Libra
 
 This crate is a Rust library for parsing and generating Human JSON [Hjson](http://hjson.org). It is built upon [Serde](https://github.com/serde-rs/serde), a high performance generic serialization framework.
 
+# v0.1/unreleased
+
+- Parser is working
+
+Todo:
+
+- Serializer
+- Unified number type
+
 # Install
 
 This crate works with Cargo and can be found on [crates.io](https://crates.io/crates/serde_hjson) with a `Cargo.toml` like:
