@@ -20,7 +20,7 @@
 //! ```rust
 //! extern crate serde_hjson;
 //!
-//! use serde_json::{Value, Map};
+//! use serde_hjson::{Value, Map};
 //!
 //! fn main() {
 //!     let mut map = Map::new();

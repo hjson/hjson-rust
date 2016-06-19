@@ -1,5 +1,5 @@
 
-use std::i32;
+use std::str;
 use std::io;
 
 use super::error::{Error, ErrorCode, Result};
@@ -72,8 +72,8 @@ impl<Iter> StringReader<Iter>
         Ok(try!(self.peek()).unwrap_or(b'\x00'))
     }
 
-    pub fn eat_char(&mut self) {
-        self.ch.remove(0);
+    pub fn eat_char(&mut self) -> u8 {
+        self.ch.remove(0)
     }
 
     pub fn uneat_char(&mut self, ch: u8) {
@@ -126,7 +126,7 @@ impl<Iter> StringReader<Iter>
                             self.eat_char();
                             self.eat_char();
                         },
-                        Some(_) => self.eat_char(),
+                        Some(_) => { self.eat_char(); },
                         None => return Err(self.error(ErrorCode::TrailingCharacters)), //todo
                     }
                 }
@@ -143,6 +143,7 @@ impl<Iter> StringReader<Iter>
 
 pub struct ParseNumber<Iter: Iterator<Item=u8>> {
     rdr: StringReader<Iter>,
+    result: Vec<u8>,
 }
 
 macro_rules! try_or_invalid {
@@ -160,13 +161,14 @@ impl<Iter: Iterator<Item=u8>> ParseNumber<Iter> {
     pub fn new(iter: Iter) -> Self {
         ParseNumber {
             rdr: StringReader::new(iter),
+            result: Vec::new(),
         }
     }
 
     pub fn parse(&mut self, stop_at_next: bool) -> Result<Value> {
 
-        match self.parse_integer() {
-            Ok(v) => {
+        match self.try_parse() {
+            Ok(()) => {
 
                 try!(self.rdr.parse_whitespace());
 
@@ -179,7 +181,10 @@ impl<Iter: Iterator<Item=u8>> ParseNumber<Iter> {
                 }
 
                 match ch {
-                    b'\x00' => { return Ok(v); },
+                    b'\x00' => {
+                        let res = str::from_utf8(&self.result).unwrap();
+                        return Ok(Value::F64(res.parse::<f64>().unwrap()));
+                    },
                     _ => { return Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0)); },
                 }
             },
@@ -187,203 +192,92 @@ impl<Iter: Iterator<Item=u8>> ParseNumber<Iter> {
         }
     }
 
-    fn parse_integer(&mut self) -> Result<Value> {
-        let pos = if try!(self.rdr.peek_or_null()) == b'-' {
-            self.rdr.eat_char();
-            false
-        } else { true };
+    fn try_parse(&mut self) -> Result<()> {
+        if try!(self.rdr.peek_or_null()) == b'-' {
+            self.result.push(self.rdr.eat_char());
+        }
 
-        match try!(self.rdr.next_char_or_null()) {
-            b'0' => {
-                // There can be only one leading '0'.
-                match try!(self.rdr.peek_or_null()) {
-                    b'0' ... b'9' => {
-                        Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0))
-                    }
-                    _ => {
-                        self.parse_num_next(pos, 0)
-                    }
+        let mut has_value = false;
+
+        if try!(self.rdr.peek_or_null()) == b'0' {
+            self.result.push(self.rdr.eat_char());
+            has_value = true;
+            // There can be only one leading '0'.
+            match try!(self.rdr.peek_or_null()) {
+                b'0' ... b'9' => {
+                    return Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0));
                 }
-            },
-            c @ b'1' ... b'9' => {
-                let mut res: u64 = (c as u64) - ('0' as u64);
-
-                loop {
-                    match try!(self.rdr.peek_or_null()) {
-                        c @ b'0' ... b'9' => {
-                            self.rdr.eat_char();
-
-                            let digit = (c as u64) - ('0' as u64);
-
-                            // We need to be careful with overflow. If we can, try to keep the
-                            // number as a `u64` until we grow too large. At that point, switch to
-                            // parsing the value as a `f64`.
-                            match res.checked_mul(10).and_then(|val| val.checked_add(digit)) {
-                                Some(res_) => { res = res_; }
-                                None => {
-                                    return self.parse_float(pos, (res as f64) * 10.0 + (digit as f64));
-                                }
-                            }
-                        }
-                        _ => {
-                            return self.parse_num_next(pos, res);
-                        }
-                    }
-                }
-            }
-            _ => {
-                Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0))
+                _ => { }
             }
         }
-    }
 
-    fn parse_float(&mut self,
-
-                      pos: bool,
-                      mut res: f64) -> Result<Value> {
         loop {
             match try!(self.rdr.next_char_or_null()) {
                 c @ b'0' ... b'9' => {
-                    let digit = (c as u64) - ('0' as u64);
-
-                    res *= 10.0;
-                    res += digit as f64;
+                    self.result.push(c);
+                    has_value = true;
+                }
+                b'.' => {
+                    if !has_value { return Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0)); }
+                    return self.try_decimal();
+                }
+                b'e' | b'E' => {
+                    if !has_value { return Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0)); }
+                    return self.try_exponent();
                 }
                 _ => {
-                    match try!(self.rdr.peek_or_null()) {
-                        b'.' => {
-                            return self.parse_decimal(pos, res);
-                        }
-                        b'e' | b'E' => {
-                            return self.parse_exponent(pos, res);
-                        }
-                        _ => {
-                            if !pos {
-                                res = -res;
-                            }
-
-                            return Ok(Value::F64(res));
-                        }
-                    }
+                    return Ok(());
                 }
             }
         }
     }
 
-    fn parse_num_next(&mut self,
+    fn try_decimal(&mut self) -> Result<()> {
 
-                       pos: bool,
-                       res: u64) -> Result<Value> {
-        match try!(self.rdr.peek_or_null()) {
-            b'.' => {
-                self.parse_decimal(pos, res as f64)
-            }
-            b'e' | b'E' => {
-                self.parse_exponent(pos, res as f64)
-            }
-            _ => {
-                if pos {
-                    Ok(Value::U64(res))
-                } else {
-                    let res_i64 = (res as i64).wrapping_neg();
-
-                    // Convert into a float if we underflow.
-                    if res_i64 > 0 {
-                        Ok(Value::F64(-(res as f64)))
-                    } else {
-                        Ok(Value::I64(res_i64))
-                    }
-                }
-            }
-        }
-    }
-
-    fn parse_decimal(&mut self,
-
-                        pos: bool,
-                        mut res: f64) -> Result<Value> {
-        self.rdr.eat_char();
-
-        let mut dec = 0.1;
+        self.result.push(b'.');
 
         // Make sure a digit follows the decimal place.
         match try!(self.rdr.next_char_or_null()) {
-            c @ b'0' ... b'9' => {
-                res += (((c as u64) - (b'0' as u64)) as f64) * dec;
-            }
+            c @ b'0' ... b'9' => { self.result.push(c); }
              _ => { return Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0)); }
-        }
+        };
 
         loop {
             match try!(self.rdr.peek_or_null()) {
-                c @ b'0' ... b'9' => {
-                    self.rdr.eat_char();
-
-                    dec /= 10.0;
-                    res += (((c as u64) - (b'0' as u64)) as f64) * dec;
-                }
+                b'0' ... b'9' => { self.result.push(self.rdr.eat_char()); }
                 _ => { break; }
             }
         }
 
         match try!(self.rdr.peek_or_null()) {
-            b'e' | b'E' => {
-                self.parse_exponent(pos, res)
-            }
-            _ => {
-                if pos {
-                    Ok(Value::F64(res))
-                } else {
-                    Ok(Value::F64(-res))
-                }
-            }
+            b'e' | b'E' => { self.rdr.eat_char(); self.try_exponent() },
+            _ => Ok(())
         }
-
     }
 
-    fn parse_exponent(&mut self, pos: bool, mut res: f64) -> Result<Value> {
-        self.rdr.eat_char();
+    fn try_exponent(&mut self) -> Result<()> {
 
-        let pos_exp = match try!(self.rdr.peek_or_null()) {
-            b'+' => { self.rdr.eat_char(); true }
-            b'-' => { self.rdr.eat_char(); false }
-            _ => { true }
+        self.result.push(b'e');
+
+        match try!(self.rdr.peek_or_null()) {
+            b'+' => { self.result.push(self.rdr.eat_char()); }
+            b'-' => { self.result.push(self.rdr.eat_char()); }
+            _ => { }
         };
 
         // Make sure a digit follows the exponent place.
-        let mut exp = match try!(self.rdr.next_char_or_null()) {
-            c @ b'0' ... b'9' => { (c as u64) - (b'0' as u64) }
+        match try!(self.rdr.next_char_or_null()) {
+            c @ b'0' ... b'9' => { self.result.push(c); }
             _ => { return Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0)); }
         };
 
         loop {
             match try!(self.rdr.peek_or_null()) {
-                c @ b'0' ... b'9' => {
-                    self.rdr.eat_char();
-
-                    exp = try_or_invalid!(exp.checked_mul(10));
-                    exp = try_or_invalid!(exp.checked_add((c as u64) - (b'0' as u64)));
-                }
+                b'0' ... b'9' => { self.result.push(self.rdr.eat_char()); }
                 _ => { break; }
             }
         }
 
-        let exp = if exp <= i32::MAX as u64 {
-            10_f64.powi(exp as i32)
-        } else {
-            return Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0));
-        };
-
-        if pos_exp {
-            res *= exp;
-        } else {
-            res /= exp;
-        }
-
-        if pos {
-            Ok(Value::F64(res))
-        } else {
-            Ok(Value::F64(-res))
-        }
+        Ok(())
     }
 }
