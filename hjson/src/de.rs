@@ -208,8 +208,7 @@ impl<Iter> Deserializer<Iter>
                     b't' => if str::from_utf8(&self.str_buf).unwrap().trim() == "true" { self.rdr.uneat_char(ch); return visitor.visit_bool(true); },
                     _ => {
                         if chf == b'-' || chf >= b'0' && chf <= b'9' {
-                            let buf = self.str_buf.clone();
-                            let mut pn = ParseNumber::new(buf.into_iter());
+                            let mut pn = ParseNumber::new(self.str_buf.iter().map(|b| *b));
                             match pn.parse(false) {
                                 Ok(Value::U64(v)) => { self.rdr.uneat_char(ch); return visitor.visit_u64(v); },
                                 Ok(Value::F64(v)) => { self.rdr.uneat_char(ch); return visitor.visit_f64(v); },
@@ -773,29 +772,26 @@ pub fn from_iter<I, T>(iter: I) -> Result<T>
 
     let bytes = fold.unwrap();
 
-    let mut de = Deserializer::new_for_root(bytes.clone().into_iter());
-    let value = match de::Deserialize::deserialize(&mut de) {
+    // deserialize and make sure the whole stream has been consumed
+    let mut de = Deserializer::new_for_root(bytes.iter().map(|b| *b));
+    let value = match de::Deserialize::deserialize(&mut de)
+        .and_then(|x| { try!(de.end()); Ok(x) })
+     {
         Ok(v) => Ok(v),
         Err(e) => {
-            de = Deserializer::new(bytes.into_iter());
-            match de::Deserialize::deserialize(&mut de) {
+            let mut de2 = Deserializer::new(bytes.iter().map(|b| *b));
+            match de::Deserialize::deserialize(&mut de2).and_then(|x| { try!(de2.end()); Ok(x) }) {
                 Ok(v) => Ok(v),
                 Err(_) => Err(e),
             }
         }
     };
 
-    // Make sure the whole stream has been consumed.
-    if value.is_ok() {
-        try!(de.end());
-    }
     value
-    //Ok(value)
 }
 
 /// Decodes a Hjson value from a `std::io::Read`.
 pub fn from_reader<R, T>(rdr: R) -> Result<T>
-//pub fn from_reader<R, T>(mut rdr: R) -> Result<T>
     where R: io::Read,
           T: de::Deserialize,
 {

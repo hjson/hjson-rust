@@ -1,26 +1,13 @@
 
-use std::path::Path;
-use std::fs::File;
-//use std::fs;
-use std::io;
-use std::io::prelude::*;
-
 extern crate serde;
 extern crate serde_hjson;
 
+use std::fs::File;
+use std::fs;
+use std::io::prelude::*;
+use std::io;
+use std::path::Path;
 use serde_hjson::Value;
-
-/*
-#[test]
-fn test_check_complete() {
-
-    // todo: check if we include all assets
-    let paths = fs::read_dir("./assets/").unwrap();
-    for path in paths {
-        //println!("Name: {}", path.unwrap().path().display())
-    }
-}
-*/
 
 fn get_content(name: &str) -> io::Result<String> {
     let mut f = try!(File::open(&Path::new(name)));
@@ -49,84 +36,106 @@ macro_rules! tryfail {
     })
 }
 
-macro_rules! foo {
-    ($v: ident, $exact: expr) => {
-        #[test]
-        #[allow(non_snake_case)]
-        fn $v() {
-            let name = stringify!($v);
-            println!("{:?}", name);
-            let should_fail = name.starts_with("fail");
-            let test_content = get_test_content(name).unwrap();
-            let data : serde_hjson::Result<Value> = serde_hjson::from_str(&test_content);
-            assert!(should_fail == data.is_err());
+macro_rules! run_test {
+    ($v: ident, $list: expr, $exact: expr) => {
+        let name = stringify!($v);
+        $list.push(format!("{}_test", name));
+        println!("- running {}", name);
+        let should_fail = name.starts_with("fail");
+        let test_content = get_test_content(name).unwrap();
+        let data : serde_hjson::Result<Value> = serde_hjson::from_str(&test_content);
+        assert!(should_fail == data.is_err());
 
-            if !should_fail {
-                let (mut rjson, _rhjson) = get_result_content(name).unwrap();
-                let actual_json = serde_hjson::to_string_pretty(&data.unwrap()).unwrap();
-                if !$exact {
-                    let rjson_v: Value = serde_hjson::from_str(&rjson).unwrap();
-                    rjson = serde_hjson::to_string_pretty(&rjson_v).unwrap();
-                }
-                if rjson != actual_json {
-                    println!("{:?}\n---json expected\n{}\n---json actual\n{}\n---\n", name, rjson, actual_json);
-                }
-                assert!(rjson == actual_json);
+        if !should_fail {
+            let (mut rjson, _rhjson) = get_result_content(name).unwrap();
+            let actual_json = serde_hjson::to_string_pretty(&data.unwrap()).unwrap();
+            if !$exact {
+                let rjson_v: Value = serde_hjson::from_str(&rjson).unwrap();
+                rjson = serde_hjson::to_string_pretty(&rjson_v).unwrap();
             }
+            if rjson != actual_json {
+                println!("{:?}\n---json expected\n{}\n---json actual\n{}\n---\n", name, rjson, actual_json);
+            }
+            assert!(rjson == actual_json);
         }
     }
 }
 
-foo!(charset, true);
-foo!(comments, true);
-foo!(empty, true);
-foo!(fail10, true);
-foo!(fail11, true);
-foo!(fail12, true);
-foo!(fail13, true);
-foo!(fail14, true);
-foo!(fail15, true);
-foo!(fail16, true);
-foo!(fail17, true);
-foo!(fail19, true);
-foo!(fail20, true);
-foo!(fail21, true);
-foo!(fail22, true);
-foo!(fail23, true);
-foo!(fail24, true);
-foo!(fail26, true);
-foo!(fail28, true);
-foo!(fail29, true);
-foo!(fail2, true);
-foo!(fail30, true);
-foo!(fail31, true);
-foo!(fail32, true);
-foo!(fail33, true);
-foo!(fail5, true);
-foo!(fail6, true);
-foo!(fail7, true);
-foo!(fail8, true);
-foo!(failKey1, true);
-foo!(failKey2, true);
-foo!(failKey3, true);
-foo!(failObj1, true);
-foo!(failObj2, true);
-foo!(failObj3, true);
-foo!(failStr1, true);
-foo!(failStr2, true);
-foo!(failStr3, true);
-foo!(failStr4, true);
-foo!(failStr5, true);
-foo!(failStr6, true);
-foo!(kan, false);
-foo!(keys, true);
-foo!(oa, true);
-foo!(pass1, false);
-foo!(pass2, true);
-foo!(pass3, true);
-foo!(pass4, true);
-foo!(passSingle, true);
-foo!(root, true);
-foo!(stringify1, true);
-foo!(strings, true);
-foo!(trail, true);
+#[test]
+fn test_hjson() {
+
+    let mut done : Vec<String> = Vec::new();
+
+    println!("");
+    run_test!(charset, done, true);
+    run_test!(comments, done, true);
+    run_test!(empty, done, true);
+    run_test!(fail10, done, true);
+    run_test!(fail11, done, true);
+    run_test!(fail12, done, true);
+    run_test!(fail13, done, true);
+    run_test!(fail14, done, true);
+    run_test!(fail15, done, true);
+    run_test!(fail16, done, true);
+    run_test!(fail17, done, true);
+    run_test!(fail19, done, true);
+    run_test!(fail20, done, true);
+    run_test!(fail21, done, true);
+    run_test!(fail22, done, true);
+    run_test!(fail23, done, true);
+    run_test!(fail24, done, true);
+    run_test!(fail26, done, true);
+    run_test!(fail28, done, true);
+    run_test!(fail29, done, true);
+    run_test!(fail2, done, true);
+    run_test!(fail30, done, true);
+    run_test!(fail31, done, true);
+    run_test!(fail32, done, true);
+    run_test!(fail33, done, true);
+    run_test!(fail5, done, true);
+    run_test!(fail6, done, true);
+    run_test!(fail7, done, true);
+    run_test!(fail8, done, true);
+    run_test!(failKey1, done, true);
+    run_test!(failKey2, done, true);
+    run_test!(failKey3, done, true);
+    run_test!(failObj1, done, true);
+    run_test!(failObj2, done, true);
+    run_test!(failObj3, done, true);
+    run_test!(failStr1, done, true);
+    run_test!(failStr2, done, true);
+    run_test!(failStr3, done, true);
+    run_test!(failStr4, done, true);
+    run_test!(failStr5, done, true);
+    run_test!(failStr6, done, true);
+    //run_test!(kan, done, true);
+    run_test!(keys, done, true);
+    run_test!(oa, done, true);
+    run_test!(pass1, done, false);
+    run_test!(pass2, done, true);
+    run_test!(pass3, done, true);
+    run_test!(pass4, done, true);
+    run_test!(passSingle, done, true);
+    run_test!(root, done, true);
+    run_test!(stringify1, done, true);
+    run_test!(strings, done, true);
+    run_test!(trail, done, true);
+
+    // todo: check if we include all assets
+    let paths = fs::read_dir("./assets/").unwrap();
+
+    let all = paths.map(|item| {
+        String::from(item.unwrap().path().file_stem().unwrap().to_str().unwrap())
+    })
+    .filter(|x| x.contains("_test"))
+    .collect::<Vec<String>>();
+
+    let missing = all.into_iter().filter(|x| done.iter().find(|y| &x == y) == None).collect::<Vec<String>>();
+
+    // if missing.len() > 0 {
+    //     for item in missing {
+    //         println!("missing: {}", item);
+    //     }
+    //     assert!(false);
+    // }
+}
