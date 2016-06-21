@@ -1,6 +1,6 @@
 [package]
-name = "serde_hjson"
-version = "0.1.0"
+name = "serde-hjson"
+version = "0.0.1"
 authors = ["Christian Zangl <laktak@cdak.net>", "Erick Tryzelaar <erick.tryzelaar@gmail.com>"]
 license = "MIT"
 description = "A Hjson serialization file format"
@@ -16,7 +16,7 @@ preserve_order = ["linked-hash-map", "linked-hash-map/serde_impl"]
 
 [dependencies]
 serde = "^0.7.0"
-#linked-hash-map = { version = "0.0.10", optional = true }
-linked-hash-map = { git = "https://github.com/contain-rs/linked-hash-map.git", optional = true } # , rev = ".."
+#linked-hash-map = { version = "0.0.11", optional = true }
+linked-hash-map = { git = "https://github.com/contain-rs/linked-hash-map.git", optional = true, rev = "08590c89" }
 num = { version = "~0.1.27", default-features = false }
 clippy = { version = "^0.*", optional = true }

@@ -127,12 +127,12 @@ impl<W, F> ser::Serializer for Serializer<W, F>
 
     #[inline]
     fn serialize_f32(&mut self, value: f32) -> Result<()> {
-        fmt_f32_or_null(&mut self.writer, value).map_err(From::from)
+        fmt_f32_or_null(&mut self.writer, if value == -0f32 { 0f32 } else { value }).map_err(From::from)
     }
 
     #[inline]
     fn serialize_f64(&mut self, value: f64) -> Result<()> {
-        fmt_f64_or_null(&mut self.writer, value).map_err(From::from)
+        fmt_f64_or_null(&mut self.writer, if value == -0f64 { 0f64 } else { value }).map_err(From::from)
     }
 
     #[inline]

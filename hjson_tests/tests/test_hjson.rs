@@ -37,7 +37,8 @@ macro_rules! tryfail {
 }
 
 macro_rules! run_test {
-    ($v: ident, $list: expr, $exact: expr) => {
+    // {{ is a workaround for rust stable
+    ($v: ident, $list: expr, $exact: expr) => {{
         let name = stringify!($v);
         $list.push(format!("{}_test", name));
         println!("- running {}", name);
@@ -58,7 +59,7 @@ macro_rules! run_test {
             }
             assert!(rjson == actual_json);
         }
-    }
+    }}
 }
 
 #[test]
@@ -108,7 +109,7 @@ fn test_hjson() {
     run_test!(failStr4, done, true);
     run_test!(failStr5, done, true);
     run_test!(failStr6, done, true);
-    //run_test!(kan, done, true);
+    run_test!(kan, done, true);
     run_test!(keys, done, true);
     run_test!(oa, done, true);
     run_test!(pass1, done, false);
@@ -121,7 +122,7 @@ fn test_hjson() {
     run_test!(strings, done, true);
     run_test!(trail, done, true);
 
-    // todo: check if we include all assets
+    // check if we include all assets
     let paths = fs::read_dir("./assets/").unwrap();
 
     let all = paths.map(|item| {
@@ -132,10 +133,10 @@ fn test_hjson() {
 
     let missing = all.into_iter().filter(|x| done.iter().find(|y| &x == y) == None).collect::<Vec<String>>();
 
-    // if missing.len() > 0 {
-    //     for item in missing {
-    //         println!("missing: {}", item);
-    //     }
-    //     assert!(false);
-    // }
+    if missing.len() > 0 {
+        for item in missing {
+            println!("missing: {}", item);
+        }
+        assert!(false);
+    }
 }

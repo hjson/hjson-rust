@@ -4,6 +4,7 @@ extern crate skeptic;
 mod with_syntex {
     extern crate syntex;
     extern crate serde_codegen;
+    extern crate quasi_codegen;
 
     use std::env;
     use std::path::Path;
@@ -18,10 +19,8 @@ mod with_syntex {
             let src = Path::new(src);
             let dst = Path::new(&out_dir).join(dst);
 
-            let mut registry = syntex::Registry::new();
-
-            serde_codegen::register(&mut registry);
-            registry.expand("", &src, &dst).unwrap();
+            serde_codegen::expand(&src, &dst).unwrap();
+            quasi_codegen::expand(&dst, &dst).unwrap();
         }
     }
 }
