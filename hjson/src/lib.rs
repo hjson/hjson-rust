@@ -119,8 +119,6 @@
 extern crate num;
 extern crate core;
 extern crate serde;
-
-#[cfg(feature = "preserve_order")]
 extern crate linked_hash_map;
 
 pub use self::de::{

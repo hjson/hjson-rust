@@ -37,10 +37,6 @@ use std::io;
 use std::str;
 use std::vec;
 
-#[cfg(not(feature = "preserve_order"))]
-use std::collections::{BTreeMap, btree_map};
-
-#[cfg(feature = "preserve_order")]
 use linked_hash_map;
 
 use num::NumCast;
@@ -51,13 +47,7 @@ use serde::ser;
 use error::Error;
 
 /// Represents a key/value type.
-#[cfg(not(feature = "preserve_order"))]
-pub type Map<K, V> = BTreeMap<K, V>;
-
-/// Represents a key/value type.
-#[cfg(feature = "preserve_order")]
 pub type Map<K, V> = linked_hash_map::LinkedHashMap<K, V>;
-
 
 /// Represents a JSON value
 #[derive(Clone, PartialEq)]
@@ -397,16 +387,6 @@ impl de::Deserialize for Value {
                 Ok(Value::Array(values))
             }
 
-            #[cfg(not(feature = "preserve_order"))]
-            #[inline]
-            fn visit_map<V>(&mut self, visitor: V) -> Result<Value, V::Error>
-                where V: de::MapVisitor,
-            {
-                let values = try!(de::impls::BTreeMapVisitor::new().visit_map(visitor));
-                Ok(Value::Object(values))
-            }
-
-            #[cfg(feature = "preserve_order")]
             #[inline]
             fn visit_map<V>(&mut self, visitor: V) -> Result<Value, V::Error>
                 where V: de::MapVisitor,
@@ -790,8 +770,8 @@ impl de::Deserializer for Deserializer {
             Some(_) => Err(de::Error::invalid_type(de::Type::Map)),
             None => visitor.visit(VariantDeserializer {
                 de: self,
-                val: Some(value.clone()),
-                variant: Some(Value::String(variant.clone())),
+                val: Some(value),
+                variant: Some(Value::String(variant)),
             }),
         }
     }
@@ -921,18 +901,9 @@ impl<'a> de::SeqVisitor for SeqDeserializer<'a> {
     }
 }
 
-#[cfg(not(feature = "preserve_order"))]
 struct MapDeserializer<'a> {
     de: &'a mut Deserializer,
-    iter: btree_map::IntoIter<String, Value>,
-    value: Option<Value>,
-    len: usize,
-}
-
-#[cfg(feature = "preserve_order")]
-struct MapDeserializer<'a> {
-    de: &'a mut Deserializer,
-    iter: linked_hash_map::Iter<'a, String, Value>,
+    iter: linked_hash_map::IntoIter<String, Value>,
     value: Option<Value>,
     len: usize,
 }
@@ -946,8 +917,8 @@ impl<'a> de::MapVisitor for MapDeserializer<'a> {
         match self.iter.next() {
             Some((key, value)) => {
                 self.len -= 1;
-                self.value = Some(value.clone());
-                self.de.value = Some(Value::String(key.clone()));
+                self.value = Some(value);
+                self.de.value = Some(Value::String(key));
                 Ok(Some(try!(de::Deserialize::deserialize(self.de))))
             }
             None => Ok(None),
