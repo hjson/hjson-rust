@@ -1,6 +1,6 @@
 [package]
 name = "serde-hjson"
-version = "0.0.1"
+version = "0.1.0"
 authors = ["Christian Zangl <laktak@cdak.net>", "Erick Tryzelaar <erick.tryzelaar@gmail.com>"]
 license = "MIT"
 description = "Hjson serialization file format"

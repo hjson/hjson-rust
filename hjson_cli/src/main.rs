@@ -28,7 +28,6 @@ Options:
   -j            Output as formatted JSON.
   -c            Output as JSON.
   --version     Show version.
-  --drifting    Drifting mine.
 ";
 
 fn main() {

@@ -1,6 +1,6 @@
 [package]
 name = "hjson"
-version = "0.0.1"
+version = "0.1.0"
 authors = ["Christian Zangl <laktak@cdak.net>"]
 license = "MIT"
 description = "Hjson serialization file format"
@@ -12,8 +12,8 @@ num = "^0.1.0"
 docopt = "^0.6.0"
 serde = "^0.7.0"
 serde_json = "^0.7.0"
-serde-hjson = { version = "*", path = "../hjson" }
-#serde-hjson = "^0.0.1"
+#serde-hjson = { version = "*", path = "../hjson" }
+serde-hjson = "^0.1"
 
 [[bin]]
 name = "hjson"
