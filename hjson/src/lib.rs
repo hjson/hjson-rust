@@ -116,10 +116,14 @@
 
 #![cfg_attr(feature = "nightly-testing", plugin(clippy))]
 #![deny(missing_docs)]
-extern crate num;
+
+#[macro_use] extern crate lazy_static;
+
 extern crate core;
-extern crate serde;
 extern crate linked_hash_map;
+extern crate num;
+extern crate regex;
+extern crate serde;
 
 pub use self::de::{
     Deserializer,
@@ -133,12 +137,8 @@ pub use self::error::{Error, ErrorCode, Result};
 pub use self::ser::{
     Serializer,
     to_writer,
-    to_writer_pretty,
     to_vec,
-    to_vec_pretty,
     to_string,
-    to_string_pretty,
-    escape_str,
 };
 pub use self::value::{Value, Map, to_value, from_value};
 

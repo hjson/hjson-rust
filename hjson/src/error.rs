@@ -90,7 +90,7 @@ pub enum ErrorCode {
 
 impl fmt::Debug for ErrorCode {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use std::fmt::Debug;
+        //use std::fmt::Debug;
 
         match *self {
             ErrorCode::Custom(ref msg) => write!(f, "{}", msg),

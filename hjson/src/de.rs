@@ -108,7 +108,7 @@ impl<Iter> Deserializer<Iter>
     }
 
     fn parse_value<V>(&mut self, mut visitor: V) -> Result<V::Value>
-        where V: de::Visitor, {
+        where V: de::Visitor {
         try!(self.rdr.parse_whitespace());
 
         if try!(self.rdr.eof()) {
@@ -177,8 +177,7 @@ impl<Iter> Deserializer<Iter>
     }
 
     fn parse_tfnns<V>(&mut self, mut visitor: V) -> Result<V::Value>
-        where V: de::Visitor, {
-        // static _null: &'static [u8] = &[b'n', b'u', b'l', b'l' ];
+        where V: de::Visitor {
 
         // Hjson strings can be quoteless
         // returns string, true, false, or null.
@@ -277,7 +276,7 @@ impl<Iter> Deserializer<Iter>
     }
 
     fn parse_ml_string<V>(&mut self, mut visitor: V) -> Result<V::Value>
-        where V: de::Visitor, {
+        where V: de::Visitor {
         self.str_buf.clear();
 
         // Parse a multiline string value.
@@ -428,7 +427,7 @@ impl<Iter> de::Deserializer for Deserializer<Iter>
 
     #[inline]
     fn deserialize<V>(&mut self, visitor: V) -> Result<V::Value>
-        where V: de::Visitor, {
+        where V: de::Visitor {
 
         match self.state {
             State::Root => {}
@@ -440,7 +439,7 @@ impl<Iter> de::Deserializer for Deserializer<Iter>
     /// Parses a `null` as a None, and any other values as a `Some(...)`.
     #[inline]
     fn deserialize_option<V>(&mut self, mut visitor: V) -> Result<V::Value>
-        where V: de::Visitor, {
+        where V: de::Visitor {
         try!(self.rdr.parse_whitespace());
 
         match try!(self.rdr.peek_or_null()) {
@@ -460,7 +459,7 @@ impl<Iter> de::Deserializer for Deserializer<Iter>
     fn deserialize_newtype_struct<V>(&mut self,
                                _name: &str,
                                mut visitor: V) -> Result<V::Value>
-        where V: de::Visitor, {
+        where V: de::Visitor {
         visitor.visit_newtype_struct(self)
     }
 
@@ -471,7 +470,7 @@ impl<Iter> de::Deserializer for Deserializer<Iter>
                      _name: &str,
                      _variants: &'static [&'static str],
                      mut visitor: V) -> Result<V::Value>
-        where V: de::EnumVisitor, {
+        where V: de::EnumVisitor {
         try!(self.rdr.parse_whitespace());
 
         match try!(self.rdr.next_char_or_null()) {
@@ -520,7 +519,7 @@ impl<'a, Iter> de::SeqVisitor for SeqVisitor<'a, Iter>
     type Error = Error;
 
     fn visit<T>(&mut self) -> Result<Option<T>>
-        where T: de::Deserialize, {
+        where T: de::Deserialize {
         try!(self.de.rdr.parse_whitespace());
 
         match try!(self.de.rdr.peek()) {
@@ -588,7 +587,7 @@ impl<'a, Iter> de::MapVisitor for MapVisitor<'a, Iter>
     type Error = Error;
 
     fn visit_key<K>(&mut self) -> Result<Option<K>>
-        where K: de::Deserialize, {
+        where K: de::Deserialize {
         try!(self.de.rdr.parse_whitespace());
 
         if self.first {
@@ -620,7 +619,7 @@ impl<'a, Iter> de::MapVisitor for MapVisitor<'a, Iter>
     }
 
     fn visit_value<V>(&mut self) -> Result<V>
-        where V: de::Deserialize, {
+        where V: de::Deserialize {
         try!(self.de.parse_object_colon());
 
         Ok(try!(de::Deserialize::deserialize(self.de)))
@@ -645,7 +644,7 @@ impl<'a, Iter> de::MapVisitor for MapVisitor<'a, Iter>
     }
 
     fn missing_field<V>(&mut self, field: &'static str) -> Result<V>
-        where V: de::Deserialize, {
+        where V: de::Deserialize {
         use std;
 
         struct MissingFieldDeserializer(&'static str);
@@ -654,14 +653,14 @@ impl<'a, Iter> de::MapVisitor for MapVisitor<'a, Iter>
             type Error = de::value::Error;
 
             fn deserialize<V>(&mut self, _visitor: V) -> std::result::Result<V::Value, Self::Error>
-                where V: de::Visitor, {
+                where V: de::Visitor {
                 let &mut MissingFieldDeserializer(field) = self;
                 Err(de::value::Error::MissingField(field))
             }
 
             fn deserialize_option<V>(&mut self,
                                      mut visitor: V) -> std::result::Result<V::Value, Self::Error>
-                where V: de::Visitor, {
+                where V: de::Visitor {
                 visitor.visit_none()
             }
         }
@@ -688,21 +687,21 @@ impl<Iter> de::VariantVisitor for Deserializer<Iter>
     }
 
     fn visit_newtype<T>(&mut self) -> Result<T>
-        where T: de::Deserialize, {
+        where T: de::Deserialize {
         de::Deserialize::deserialize(self)
     }
 
     fn visit_tuple<V>(&mut self,
                       _len: usize,
                       visitor: V) -> Result<V::Value>
-        where V: de::Visitor, {
+        where V: de::Visitor {
         de::Deserializer::deserialize(self, visitor)
     }
 
     fn visit_struct<V>(&mut self,
                        _fields: &'static [&'static str],
                        visitor: V) -> Result<V::Value>
-        where V: de::Visitor, {
+        where V: de::Visitor {
         de::Deserializer::deserialize(self, visitor)
     }
 }

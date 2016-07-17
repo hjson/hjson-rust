@@ -172,12 +172,15 @@ impl<Iter: Iterator<Item=u8>> ParseNumber<Iter> {
 
                 try!(self.rdr.parse_whitespace());
 
-                let ch = try!(self.rdr.next_char_or_null());
+                let mut ch = try!(self.rdr.next_char_or_null());
 
                 if stop_at_next {
-                  // end scan if we find a punctuator character like ,}] or a comment
-                  //if (ch == b',' || ch == b'}' || ch == b']' ||
-                  //  ch == b'#' || ch == b'/' && (text[at] == b'/' || text[at] == b'*')) ch = 0;
+                    let ch2 = try!(self.rdr.peek_or_null());
+                    // end scan if we find a punctuator character like ,}] or a comment
+                    if ch == b',' || ch == b'}' || ch == b']' ||
+                       ch == b'#' || ch == b'/' && (ch2 == b'/' || ch2 == b'*') {
+                        ch = b'\x00';
+                    }
                 }
 
                 match ch {
@@ -212,20 +215,23 @@ impl<Iter: Iterator<Item=u8>> ParseNumber<Iter> {
         }
 
         loop {
-            match try!(self.rdr.next_char_or_null()) {
-                c @ b'0' ... b'9' => {
-                    self.result.push(c);
+            match try!(self.rdr.peek_or_null()) {
+                b'0' ... b'9' => {
+                    self.result.push(self.rdr.eat_char());
                     has_value = true;
                 }
                 b'.' => {
                     if !has_value { return Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0)); }
+                    self.rdr.eat_char();
                     return self.try_decimal();
                 }
                 b'e' | b'E' => {
                     if !has_value { return Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0)); }
+                    self.rdr.eat_char();
                     return self.try_exponent();
                 }
                 _ => {
+                    if !has_value { return Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0)); }
                     return Ok(());
                 }
             }
