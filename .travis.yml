@@ -4,8 +4,14 @@ sudo: false
 # run builds for all the trains (and more)
 rust:
 - stable
-- beta
 - nightly
+- 1.8.0
+- 1.9.0
+- beta
+
+matrix:
+  include:
+    - rust: nightly
 
 addons:
   apt:
@@ -20,27 +26,16 @@ before_script:
     export PATH=$HOME/.local/bin:$PATH
 
 script:
-# TEMPORARY UNTIL SERDE 0.7 IS RELEASED
-- |
-  mkdir .travis-deps
-  mkdir .cargo
-  echo 'paths = ["./.travis-deps/serde"]' > .cargo/config
-  git clone https://github.com/serde-rs/serde .travis-deps/serde
-  pushd .travis-deps/serde
-  git reset --hard origin/master
-  popd
 - |
     (cd hjson && travis-cargo build) &&
-    (cd hjson && travis-cargo test) &&
-    (cd hjson_tests && travis-cargo test -- --features with-syntex --no-default-features) &&
-    (cd hjson_tests && travis-cargo --only nightly test -- features nightly-testing) &&
-    (cd hjson_tests && travis-cargo --only nightly bench -- features nightly-testing) &&
-    (cd hjson_tests && travis-cargo --only nightly bench -- --features "nightly-testing with-syntex" --no-default-features) &&
+    (cd hjson && travis-cargo --only nightly test) &&
+    (cd hjson_tests && travis-cargo --skip nightly test -- --features with-syntex --no-default-features) &&
+    (cd hjson_tests && travis-cargo --only nightly test -- --features unstable-testing) &&
     (cd hjson && travis-cargo --only stable doc)
 
 after_success:
 #- (cd hjson && travis-cargo --only stable doc-upload)
-#- (cd hjson_tests && travis-cargo coveralls --no-sudo)
+#- (cd hjson_tests && travis-cargo --only stable coveralls --no-sudo)
 
 env:
   global:
