@@ -1,6 +1,6 @@
 [package]
 name = "hjson"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Christian Zangl <laktak@cdak.net>"]
 license = "MIT"
 description = "Hjson serialization file format"

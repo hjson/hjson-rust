@@ -14,6 +14,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io;
 
+const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 const USAGE: &'static str = "
 Hjson, the Human JSON.
 
@@ -21,13 +22,13 @@ Usage:
   hjson [options]
   hjson [options] <input>
   hjson (-h | --help)
-  hjson --version
+  hjson (-V | --version)
 
 Options:
   -h --help     Show this screen.
   -j            Output as formatted JSON.
   -c            Output as JSON.
-  --version     Show version.
+  -V --version  Show version.
 ";
 
 fn main() {
@@ -36,6 +37,11 @@ fn main() {
     let args = Docopt::new(USAGE)
                       .and_then(|dopt| dopt.parse())
                       .unwrap_or_else(|e| e.exit());
+
+    if args.get_bool("--version") {
+        println!("Hjson CLI {}", VERSION);
+        return;
+    }
 
     let input = args.get_str("<input>");
     let mut buffer = String::new();
