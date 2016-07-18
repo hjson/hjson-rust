@@ -12,7 +12,6 @@ use serde::de;
 use super::error::{Error, ErrorCode, Result};
 use super::util::StringReader;
 use super::util::ParseNumber;
-use super::value::Value;
 
 enum State {
     Normal,
@@ -209,11 +208,8 @@ impl<Iter> Deserializer<Iter>
                         if chf == b'-' || chf >= b'0' && chf <= b'9' {
                             let mut pn = ParseNumber::new(self.str_buf.iter().map(|b| *b));
                             match pn.parse(false) {
-                                Ok(Value::U64(v)) => { self.rdr.uneat_char(ch); return visitor.visit_u64(v); },
-                                Ok(Value::F64(v)) => { self.rdr.uneat_char(ch); return visitor.visit_f64(v); },
-                                Ok(Value::I64(v)) => { self.rdr.uneat_char(ch); return visitor.visit_i64(v); },
-                                Ok(_) => {}
-                                Err(_) => {}
+                                Ok(v) => { self.rdr.uneat_char(ch); return visitor.visit_f64(v); },
+                                Err(_) => {} // not a number, continue
                             }
                         }
                     },

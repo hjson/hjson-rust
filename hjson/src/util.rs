@@ -4,8 +4,6 @@ use std::io;
 
 use super::error::{Error, ErrorCode, Result};
 
-use super::value::Value;
-
 pub struct StringReader<Iter: Iterator<Item=u8>> {
     iter: Iter,
     line: usize,
@@ -165,7 +163,7 @@ impl<Iter: Iterator<Item=u8>> ParseNumber<Iter> {
         }
     }
 
-    pub fn parse(&mut self, stop_at_next: bool) -> Result<Value> {
+    pub fn parse(&mut self, stop_at_next: bool) -> Result<f64> {
 
         match self.try_parse() {
             Ok(()) => {
@@ -186,7 +184,7 @@ impl<Iter: Iterator<Item=u8>> ParseNumber<Iter> {
                 match ch {
                     b'\x00' => {
                         let res = str::from_utf8(&self.result).unwrap();
-                        return Ok(Value::F64(res.parse::<f64>().unwrap()));
+                        return Ok(res.parse::<f64>().unwrap());
                     },
                     _ => { return Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0)); },
                 }
