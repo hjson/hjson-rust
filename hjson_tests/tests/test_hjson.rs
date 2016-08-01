@@ -23,11 +23,6 @@ fn get_test_content(name: &str) -> io::Result<String> {
     get_content(&p)
 }
 
-// fn get_result_content(name: &str) -> io::Result<(String,Option<String>)> {
-//     let p1 = format!("./assets/{}_result.json", name);
-//     let p2 = format!("./assets/{}_result.hjson", name);
-//     Ok(( try!(get_content(&p1)), if !Path::new(&p2).exists() { Some(try!(get_content(&p2))) } else { None }))
-// }
 fn get_result_content(name: &str) -> io::Result<(String,String)> {
     let p1 = format!("./assets/{}_result.json", name);
     let p2 = format!("./assets/{}_result.hjson", name);
@@ -110,6 +105,7 @@ fn test_hjson() {
     run_test!(fail31, done, no_fix);
     run_test!(fail32, done, no_fix);
     run_test!(fail33, done, no_fix);
+    run_test!(fail34, done, no_fix);
     run_test!(fail5, done, no_fix);
     run_test!(fail6, done, no_fix);
     run_test!(fail7, done, no_fix);
