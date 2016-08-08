@@ -42,14 +42,9 @@ macro_rules! run_test {
 
         if !should_fail {
             let udata = data.unwrap();
-            //let (mut rjson, mut rhjson) = get_result_content(name).unwrap();
             let ( rjson, rhjson) = get_result_content(name).unwrap();
             let actual_hjson = serde_hjson::to_string(&udata).unwrap();
             let actual_json = $fix(serde_json::to_string_pretty(&udata).unwrap());
-            // if !$exact {
-            //     let rjson_v: Value = serde_hjson::from_str(&rjson).unwrap();
-            //     rjson = serde_hjson::to_string_pretty(&rjson_v).unwrap();
-            // }
             if rhjson != actual_hjson {
                 println!("{:?}\n---hjson expected\n{}\n---hjson actual\n{}\n---\n", name, rhjson, actual_hjson);
             }
