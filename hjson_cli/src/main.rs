@@ -1,5 +1,4 @@
 
-extern crate num;
 extern crate core;
 extern crate docopt;
 extern crate serde;

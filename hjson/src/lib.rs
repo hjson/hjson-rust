@@ -121,7 +121,7 @@
 
 extern crate core;
 extern crate linked_hash_map;
-extern crate num;
+extern crate num_traits;
 extern crate regex;
 extern crate serde;
 
@@ -141,6 +141,9 @@ pub use self::ser::{
     to_string,
 };
 pub use self::value::{Value, Map, to_value, from_value};
+
+#[macro_use]
+mod forward;
 
 pub mod builder;
 pub mod de;

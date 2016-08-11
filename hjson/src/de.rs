@@ -493,6 +493,36 @@ impl<Iter> de::Deserializer for Deserializer<Iter>
             }
         }
     }
+
+    forward_to_deserialize!{
+        deserialize_bool();
+        deserialize_usize();
+        deserialize_u8();
+        deserialize_u16();
+        deserialize_u32();
+        deserialize_u64();
+        deserialize_isize();
+        deserialize_i8();
+        deserialize_i16();
+        deserialize_i32();
+        deserialize_i64();
+        deserialize_f32();
+        deserialize_f64();
+        deserialize_char();
+        deserialize_str();
+        deserialize_string();
+        deserialize_unit();
+        deserialize_seq();
+        deserialize_seq_fixed_size(len: usize);
+        deserialize_bytes();
+        deserialize_map();
+        deserialize_unit_struct(name: &'static str);
+        deserialize_tuple_struct(name: &'static str, len: usize);
+        deserialize_struct(name: &'static str, fields: &'static [&'static str]);
+        deserialize_struct_field();
+        deserialize_tuple(len: usize);
+        deserialize_ignored_any();
+    }
 }
 
 struct SeqVisitor<'a, Iter: 'a + Iterator<Item=u8>> {
@@ -658,6 +688,38 @@ impl<'a, Iter> de::MapVisitor for MapVisitor<'a, Iter>
                                      mut visitor: V) -> std::result::Result<V::Value, Self::Error>
                 where V: de::Visitor {
                 visitor.visit_none()
+            }
+
+            forward_to_deserialize!{
+                deserialize_bool();
+                deserialize_usize();
+                deserialize_u8();
+                deserialize_u16();
+                deserialize_u32();
+                deserialize_u64();
+                deserialize_isize();
+                deserialize_i8();
+                deserialize_i16();
+                deserialize_i32();
+                deserialize_i64();
+                deserialize_f32();
+                deserialize_f64();
+                deserialize_char();
+                deserialize_str();
+                deserialize_string();
+                deserialize_unit();
+                deserialize_seq();
+                deserialize_seq_fixed_size(len: usize);
+                deserialize_bytes();
+                deserialize_map();
+                deserialize_unit_struct(name: &'static str);
+                deserialize_newtype_struct(name: &'static str);
+                deserialize_tuple_struct(name: &'static str, len: usize);
+                deserialize_struct(name: &'static str, fields: &'static [&'static str]);
+                deserialize_struct_field();
+                deserialize_tuple(len: usize);
+                deserialize_enum(name: &'static str, variants: &'static [&'static str]);
+                deserialize_ignored_any();
             }
         }
 

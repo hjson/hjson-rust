@@ -1,7 +1,7 @@
 [package]
 name = "serde-hjson"
-version = "0.1.0"
-authors = ["Christian Zangl <laktak@cdak.net>", "Erick Tryzelaar <erick.tryzelaar@gmail.com>"]
+version = "0.8.0"
+authors = ["Christian Zangl <laktak@cdak.net>"]
 license = "MIT"
 description = "Hjson serialization file format"
 repository = "https://github.com/laktak/hjson-rust"
@@ -10,12 +10,15 @@ readme = "../README.md"
 keywords = ["hjson", "json", "serde", "serialization"]
 
 [features]
-nightly-testing = ["clippy"]
+unstable-testing = ["clippy"]
+preserve_order = ["linked-hash-map", "linked-hash-map/serde_impl"]
+default = ["preserve_order"]
 
 [dependencies]
-clippy = { version = "^0.*", optional = true }
-lazy_static = "^0.2"
-linked-hash-map = { version = "0.0.11", features = [ "serde_impl" ] }
-num = { version = "^0.1.0", default-features = false }
+serde = "^0.8.0"
+num-traits = "~0.1.32"
 regex = "^0.1"
-serde = "^0.7.0"
+lazy_static = "^0.2"
+clippy = { version = "^0.*", optional = true }
+linked-hash-map = { version = "^0.3.0", optional = true }
+

@@ -7,6 +7,7 @@
 extern crate serde;
 extern crate serde_hjson;
 extern crate skeptic;
+extern crate regex;
 
 #[cfg(feature = "with-syntex")]
 include!(concat!(env!("OUT_DIR"), "/test.rs"));

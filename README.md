@@ -1,7 +1,7 @@
 # hjson-rust for serde
 
 [![Build Status](https://img.shields.io/travis/laktak/hjson-rust.svg?style=flat-square)](http://travis-ci.org/laktak/hjson-rust)
-[![crate](https://img.shields.io/crates/v/serde-hjson.svg)](https://crates.io/crates/serde-hjson)
+[![crate](https://img.shields.io/crates/v/serde-hjson.svg?style=flat-square)](https://crates.io/crates/serde-hjson)
 
 ![Hjson Intro](http://hjson.org/hjson1.gif)
 
@@ -38,23 +38,73 @@ serde = "*"
 serde-hjson = "*"
 ```
 
+## From the Commandline
+
+Install with `cargo install hjson`
+
+```
+Hjson, the Human JSON.
+
+Usage:
+  hjson [options]
+  hjson [options] <input>
+  hjson (-h | --help)
+  hjson (-V | --version)
+
+Options:
+  -h --help     Show this screen.
+  -j            Output as formatted JSON.
+  -c            Output as JSON.
+  -V --version  Show version.
+```
+
+Sample:
+- run `hjson test.json > test.hjson` to convert to Hjson
+- run `hjson -j test.hjson > test.json` to convert to JSON
+
+
 # Usage
 
 ```rust
 extern crate serde;
 extern crate serde_hjson;
 
-use serde_hjson::Map;
+use serde_hjson::{Map,Value};
 
 fn main() {
-    let mut map = Map::new();
-    map.insert("x".to_string(), 1.0);
-    map.insert("y".to_string(), 2.0);
 
-    let s = serde_hjson::to_string(&map).unwrap();
-    assert_eq!(s, "{\"x\":1,\"y\":2}");
+    // Now let's look at decoding Hjson data
 
-    let deserialized_map: Map<String, f64> = serde_hjson::from_str(&s).unwrap();
-    assert_eq!(map, deserialized_map);
+    let sample_text=r#"
+    {
+        # specify rate in requests/second
+        rate: 1000
+        array:
+        [
+            foo
+            bar
+        ]
+    }"#;
+
+    // Decode and unwrap.
+    let mut sample: Map<String, Value> = serde_hjson::from_str(&sample_text).unwrap();
+
+    // scope to control lifetime of borrow
+    {
+        // Extract the rate
+        let rate = sample.get("rate").unwrap().as_f64().unwrap();
+        println!("rate: {}", rate);
+
+        // Extract the array
+        let array : &mut Vec<Value> = sample.get_mut("array").unwrap().as_array_mut().unwrap();
+        println!("first: {}", array.get(0).unwrap());
+
+        // Add a value
+        array.push(Value::String("tak".to_string()));
+    }
+
+    // Encode to Hjson
+    let sample2 = serde_hjson::to_string(&sample).unwrap();
+    println!("Hjson:\n{}", sample2);
 }
 ```

@@ -9,6 +9,7 @@ use std::io::prelude::*;
 use std::io;
 use std::path::Path;
 use serde_hjson::Value;
+use regex::Regex;
 
 fn get_content(name: &str) -> io::Result<String> {
     let mut f = try!(File::open(&Path::new(name)));
@@ -58,15 +59,18 @@ macro_rules! run_test {
 
 // add fixes where rust's json differs from javascript
 
-fn no_fix(json: String) -> String { json }
+fn std_fix(json: String) -> String {
+    // serde_json serializes integers with a superfluous .0 suffix
+    let re = Regex::new(r"(?m)(?P<d>\d)\.0(?P<s>,?)$").unwrap();
+    re.replace_all(&json, "$d$s")
+}
 
-fn fix_kan(json: String) -> String { json.replace("    -0,", "    0,") }
+fn fix_kan(json: String) -> String { std_fix(json).replace("    -0,", "    0,") }
 
 fn fix_pass1(json: String) -> String {
-    json
-    .replace("0.000000000000123456789,", "1.23456789e-13,")
-    .replace("12345678900000000000000000000000000,", "1.23456789e+34,")
-    .replace("23456789012000000000000000000000000000000000000000000000000000000000000000000,", "2.3456789012e+76,")
+    std_fix(json)
+    .replace("1.23456789e34", "1.23456789e+34")
+    .replace("2.3456789012e76", "2.3456789012e+76")
 }
 
 #[test]
@@ -75,60 +79,60 @@ fn test_hjson() {
     let mut done : Vec<String> = Vec::new();
 
     println!("");
-    run_test!(charset, done, no_fix);
-    run_test!(comments, done, no_fix);
-    run_test!(empty, done, no_fix);
-    run_test!(fail10, done, no_fix);
-    run_test!(fail11, done, no_fix);
-    run_test!(fail12, done, no_fix);
-    run_test!(fail13, done, no_fix);
-    run_test!(fail14, done, no_fix);
-    run_test!(fail15, done, no_fix);
-    run_test!(fail16, done, no_fix);
-    run_test!(fail17, done, no_fix);
-    run_test!(fail19, done, no_fix);
-    run_test!(fail20, done, no_fix);
-    run_test!(fail21, done, no_fix);
-    run_test!(fail22, done, no_fix);
-    run_test!(fail23, done, no_fix);
-    run_test!(fail24, done, no_fix);
-    run_test!(fail26, done, no_fix);
-    run_test!(fail28, done, no_fix);
-    run_test!(fail29, done, no_fix);
-    run_test!(fail2, done, no_fix);
-    run_test!(fail30, done, no_fix);
-    run_test!(fail31, done, no_fix);
-    run_test!(fail32, done, no_fix);
-    run_test!(fail33, done, no_fix);
-    run_test!(fail34, done, no_fix);
-    run_test!(fail5, done, no_fix);
-    run_test!(fail6, done, no_fix);
-    run_test!(fail7, done, no_fix);
-    run_test!(fail8, done, no_fix);
-    run_test!(failKey1, done, no_fix);
-    run_test!(failKey2, done, no_fix);
-    run_test!(failKey3, done, no_fix);
-    run_test!(failObj1, done, no_fix);
-    run_test!(failObj2, done, no_fix);
-    run_test!(failObj3, done, no_fix);
-    run_test!(failStr1, done, no_fix);
-    run_test!(failStr2, done, no_fix);
-    run_test!(failStr3, done, no_fix);
-    run_test!(failStr4, done, no_fix);
-    run_test!(failStr5, done, no_fix);
-    run_test!(failStr6, done, no_fix);
+    run_test!(charset, done, std_fix);
+    run_test!(comments, done, std_fix);
+    run_test!(empty, done, std_fix);
+    run_test!(fail10, done, std_fix);
+    run_test!(fail11, done, std_fix);
+    run_test!(fail12, done, std_fix);
+    run_test!(fail13, done, std_fix);
+    run_test!(fail14, done, std_fix);
+    run_test!(fail15, done, std_fix);
+    run_test!(fail16, done, std_fix);
+    run_test!(fail17, done, std_fix);
+    run_test!(fail19, done, std_fix);
+    run_test!(fail20, done, std_fix);
+    run_test!(fail21, done, std_fix);
+    run_test!(fail22, done, std_fix);
+    run_test!(fail23, done, std_fix);
+    run_test!(fail24, done, std_fix);
+    run_test!(fail26, done, std_fix);
+    run_test!(fail28, done, std_fix);
+    run_test!(fail29, done, std_fix);
+    run_test!(fail2, done, std_fix);
+    run_test!(fail30, done, std_fix);
+    run_test!(fail31, done, std_fix);
+    run_test!(fail32, done, std_fix);
+    run_test!(fail33, done, std_fix);
+    run_test!(fail34, done, std_fix);
+    run_test!(fail5, done, std_fix);
+    run_test!(fail6, done, std_fix);
+    run_test!(fail7, done, std_fix);
+    run_test!(fail8, done, std_fix);
+    run_test!(failKey1, done, std_fix);
+    run_test!(failKey2, done, std_fix);
+    run_test!(failKey3, done, std_fix);
+    run_test!(failObj1, done, std_fix);
+    run_test!(failObj2, done, std_fix);
+    run_test!(failObj3, done, std_fix);
+    run_test!(failStr1, done, std_fix);
+    run_test!(failStr2, done, std_fix);
+    run_test!(failStr3, done, std_fix);
+    run_test!(failStr4, done, std_fix);
+    run_test!(failStr5, done, std_fix);
+    run_test!(failStr6, done, std_fix);
     run_test!(kan, done, fix_kan);
-    run_test!(keys, done, no_fix);
-    run_test!(oa, done, no_fix);
+    run_test!(keys, done, std_fix);
+    run_test!(oa, done, std_fix);
     run_test!(pass1, done, fix_pass1);
-    run_test!(pass2, done, no_fix);
-    run_test!(pass3, done, no_fix);
-    run_test!(pass4, done, no_fix);
-    run_test!(passSingle, done, no_fix);
-    run_test!(root, done, no_fix);
-    run_test!(stringify1, done, no_fix);
-    run_test!(strings, done, no_fix);
-    run_test!(trail, done, no_fix);
+    run_test!(pass2, done, std_fix);
+    run_test!(pass3, done, std_fix);
+    run_test!(pass4, done, std_fix);
+    run_test!(passSingle, done, std_fix);
+    run_test!(root, done, std_fix);
+    run_test!(stringify1, done, std_fix);
+    run_test!(strings, done, std_fix);
+    run_test!(trail, done, std_fix);
 
     // check if we include all assets
     let paths = fs::read_dir("./assets/").unwrap();
