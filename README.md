@@ -1,6 +1,6 @@
 # hjson-rust for serde
 
-[![Build Status](https://img.shields.io/travis/laktak/hjson-rust.svg?style=flat-square)](http://travis-ci.org/laktak/hjson-rust)
+[![Build Status](https://img.shields.io/travis/hjson/hjson-rust.svg?style=flat-square)](http://travis-ci.org/hjson/hjson-rust)
 [![crate](https://img.shields.io/crates/v/serde-hjson.svg?style=flat-square)](https://crates.io/crates/serde-hjson)
 
 ![Hjson Intro](http://hjson.org/hjson1.gif)

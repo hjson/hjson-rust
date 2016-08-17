@@ -1,11 +1,11 @@
 [package]
 name = "serde-hjson"
-version = "0.8.0"
+version = "0.8.1"
 authors = ["Christian Zangl <laktak@cdak.net>"]
 license = "MIT"
 description = "Hjson serialization file format"
-repository = "https://github.com/laktak/hjson-rust"
-#documentation = "https://laktak.github.io/hjson-rust/"
+repository = "https://github.com/hjson/hjson-rust"
+#documentation = "https://hjson.github.io/hjson-rust/"
 readme = "../README.md"
 keywords = ["hjson", "json", "serde", "serialization"]
 

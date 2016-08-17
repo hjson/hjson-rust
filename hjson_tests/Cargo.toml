@@ -1,6 +1,6 @@
 [package]
 name = "serde-hjson-tests"
-version = "0.8.0"
+version = "0.8.1"
 authors = ["Christian Zangl <laktak@cdak.net>"]
 build = "build.rs"
 
