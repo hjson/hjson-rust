@@ -112,6 +112,8 @@ fn test_hjson() {
     run_test!(failKey1, done, std_fix);
     run_test!(failKey2, done, std_fix);
     run_test!(failKey3, done, std_fix);
+    run_test!(failKey4, done, std_fix);
+    run_test!(failMLStr1, done, std_fix);
     run_test!(failObj1, done, std_fix);
     run_test!(failObj2, done, std_fix);
     run_test!(failObj3, done, std_fix);
@@ -121,6 +123,7 @@ fn test_hjson() {
     run_test!(failStr4, done, std_fix);
     run_test!(failStr5, done, std_fix);
     run_test!(failStr6, done, std_fix);
+    run_test!(failStr7, done, std_fix);
     run_test!(kan, done, fix_kan);
     run_test!(keys, done, std_fix);
     run_test!(oa, done, std_fix);
