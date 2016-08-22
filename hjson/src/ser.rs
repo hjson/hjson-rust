@@ -876,12 +876,11 @@ pub fn quote_str<W, F>(wr: &mut W, formatter: &mut F, value: &str) -> Result<()>
     where W: io::Write,
           F: Formatter {
     lazy_static! {
-        // NEEDS_ESCAPE is used to detect characters
+        // NEEDS_ESCAPE tests if the string can be written without escapes
         static ref NEEDS_ESCAPE: Regex = Regex::new("[\\\\\"\x00-\x1f\x7f-\u{9f}\u{00ad}\u{0600}-\u{0604}\u{070f}\u{17b4}\u{17b5}\u{200c}-\u{200f}\u{2028}-\u{202f}\u{2060}-\u{206f}\u{feff}\u{fff0}-\u{ffff}]").unwrap();
-        // like NEEDS_ESCAPE but without \\ and \"
-        static ref NEEDS_QUOTES: Regex = Regex::new("[\x00-\x1f\x7f-\u{9f}\u{00ad}\u{0600}-\u{0604}\u{070f}\u{17b4}\u{17b5}\u{200c}-\u{200f}\u{2028}-\u{202f}\u{2060}-\u{206f}\u{feff}\u{fff0}-\u{ffff}]").unwrap();
-        static ref NEEDS_QUOTES2: Regex = Regex::new(r#"^\s|^"|^'''|^#|^/\*|^//|^\{|^\[|\s$"#).unwrap();
-        // ''' || (needsQuotes but without \n and \r)
+        // NEEDS_QUOTES tests if the string can be written as a quoteless string (includes needsEscape but without \\ and \")
+        static ref NEEDS_QUOTES: Regex = Regex::new("^\\s|^\"|^'''|^#|^/\\*|^//|^\\{|^\\}|^\\[|^\\]|^:|^,|\\s$|[\x00-\x1f\x7f-\u{9f}\u{00ad}\u{0600}-\u{0604}\u{070f}\u{17b4}\u{17b5}\u{200c}-\u{200f}\u{2028}-\u{202f}\u{2060}-\u{206f}\u{feff}\u{fff0}-\u{ffff}]").unwrap();
+        // NEEDS_ESCAPEML tests if the string can be written as a multiline string (includes needsEscape but without \n, \r, \\ and \")
         static ref NEEDS_ESCAPEML: Regex = Regex::new("'''|[\x00-\x09\x0b\x0c\x0e-\x1f\x7f-\u{9f}\u{00ad}\u{0600}-\u{0604}\u{070f}\u{17b4}\u{17b5}\u{200c}-\u{200f}\u{2028}-\u{202f}\u{2060}-\u{206f}\u{feff}\u{fff0}-\u{ffff}]").unwrap();
         // starts with a keyword and optionally is followed by a comment
         static ref STARTS_WITH_KEYWORD: Regex = Regex::new(r#"^(true|false|null)\s*((,|\]|\}|#|//|/\*).*)?$"#).unwrap();
@@ -901,7 +900,7 @@ pub fn quote_str<W, F>(wr: &mut W, formatter: &mut F, value: &str) -> Result<()>
         Err(_) => false,
     };
 
-    if is_number || NEEDS_QUOTES.is_match(value) || NEEDS_QUOTES2.is_match(value) || STARTS_WITH_KEYWORD.is_match(value) {
+    if is_number || NEEDS_QUOTES.is_match(value) || STARTS_WITH_KEYWORD.is_match(value) {
 
         // First check if the string can be expressed in multiline format or
         // we must replace the offending characters with safe escape sequences.
