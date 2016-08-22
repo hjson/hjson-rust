@@ -109,6 +109,10 @@ fn main() {
 }
 ```
 
+# API
+
+[see Rust doc](http://hjson.github.io/hjson-rust/serde_hjson/)
+
 # History
 
 [see history.md](history.md)

@@ -527,14 +527,12 @@ impl<Iter> de::Deserializer for Deserializer<Iter>
 
 struct SeqVisitor<'a, Iter: 'a + Iterator<Item=u8>> {
     de: &'a mut Deserializer<Iter>,
-    //first: bool,
 }
 
 impl<'a, Iter: Iterator<Item=u8>> SeqVisitor<'a, Iter> {
     fn new(de: &'a mut Deserializer<Iter>) -> Self {
         SeqVisitor {
             de: de,
-            //first: true,
         }
     }
 }
@@ -553,11 +551,6 @@ impl<'a, Iter> de::SeqVisitor for SeqVisitor<'a, Iter>
                 return Ok(None);
             }
             Some(_) => {
-                // if self.first {
-                //     self.first = false;
-                // } else {
-                //     return Err(self.de.rdr.error(ErrorCode::ExpectedListCommaOrEnd));
-                // }
             }
             None => {
                 return Err(self.de.rdr.error(ErrorCode::EOFWhileParsingList));

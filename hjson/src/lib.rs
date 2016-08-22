@@ -1,10 +1,7 @@
-//! JSON and serialization - TODO/hjson
+//! # What is Hjson?
 //!
-//! # What is JSON?
-//!
-//! JSON (JavaScript Object Notation) is a way to write data in JavaScript.  Like XML, it allows to
-//! encode structured data in a text format that can be easily read by humans.  Its simple syntax
-//! and native compatibility with JavaScript have made it a widely used format.
+//! A configuration file format for humans. Relaxed syntax, fewer mistakes, more comments.
+//! See http://hjson.org
 //!
 //! Data types that can be encoded are JavaScript types (see the `serde_hjson:Value` enum for more
 //! details):
@@ -19,28 +16,26 @@
 //! * `Object`: equivalent to rust's `serde_hjson::Map<String, serde_hjson::Value>`
 //! * `Null`
 //!
-//! An object is a series of string keys mapping to values, in `"key": value` format.  Arrays are
-//! enclosed in square brackets ([ ... ]) and objects in curly brackets ({ ... }).  A simple JSON
-//! document encoding a person, his/her age, address and phone numbers could look like
+//! # Sample
 //!
 //! ```ignore
 //! {
-//!     "FirstName": "John",
-//!     "LastName": "Doe",
-//!     "Age": 43,
-//!     "Address": {
-//!         "Street": "Downing Street 10",
-//!         "City": "London",
-//!         "Country": "Great Britain"
-//!     },
-//!     "PhoneNumbers": [
-//!         "+44 1234567",
-//!         "+44 2345678"
+//!     FirstName: John
+//!     LastName: Doe
+//!     Age: 43
+//!     Address: {
+//!         Street: Downing Street 10
+//!         City: London
+//!         Country: Great Britain
+//!     }
+//!     PhoneNumbers: [
+//!         +44 1234567
+//!         +44 2345678
 //!     ]
 //! }
 //! ```
 //!
-//! If we assume that FirstName is optional and all other fields are mandatory, the above JSON could
+//! If we assume that FirstName is optional and all other fields are mandatory, the above Hjson could
 //! correspond to the following Rust structs:
 //!
 //! ```ignore
@@ -65,15 +60,14 @@
 //! # Type-based Serialization and Deserialization
 //!
 //! Serde provides a mechanism for low boilerplate serialization & deserialization of values to and
-//! from JSON via the serialization API.  To be able to serialize a piece of data, it must implement
+//! from Hjson via the serialization API.  To be able to serialize a piece of data, it must implement
 //! the `serde::Serialize` trait.  To be able to deserialize a piece of data, it must implement the
 //! `serde::Deserialize` trait.  Serde provides provides an annotation to automatically generate
 //! the code for these traits: `#[derive(Serialize, Deserialize)]`.
 //!
-//! The JSON API also provides an enum `serde_hjson::Value` and a method `to_value` to serialize
+//! The Hjson API also provides an enum `serde_hjson::Value` and a method `to_value` to serialize
 //! objects.  A `serde_hjson::Value` value can be serialized as a string or buffer using the
-//! functions described above.  You can also use the `json::Serializer` object, which implements the
-//! `Serializer` trait.
+//! functions described above.
 //!
 //! # Examples of use
 //!
@@ -88,11 +82,9 @@
 //! use serde_hjson::Value;
 //!
 //! fn main() {
-//!     let data: Value = serde_hjson::from_str("{\"foo\": 13, \"bar\": \"baz\"}").unwrap();
+//!     let data: Value = serde_hjson::from_str("{foo: 13, bar: \"baz\"}").unwrap();
 //!     println!("data: {:?}", data);
-//!     // data: {"bar":"baz","foo":13}
 //!     println!("object? {}", data.is_object());
-//!     // object? true
 //!
 //!     let obj = data.as_object().unwrap();
 //!     let foo = obj.get("foo").unwrap();

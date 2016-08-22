@@ -1,6 +1,6 @@
-//! JSON Value
+//! Hjson Value
 //!
-//! This module is centered around the `Value` type, which can represent all possible JSON values.
+//! This module is centered around the `Value` type, which can represent all possible Hjson values.
 //!
 //! # Example of use:
 //!
@@ -10,7 +10,7 @@
 //! use serde_hjson::Value;
 //!
 //! fn main() {
-//!     let s = "{\"x\": 1.0, \"y\": 2.0}";
+//!     let s = "{x: 1.0, y: 2.0}";
 //!     let value: Value = serde_hjson::from_str(s).unwrap();
 //! }
 //! ```
@@ -69,7 +69,7 @@ type MapVisitor<K, T> = de::impls::BTreeMapVisitor<K, T>;
 #[cfg(feature = "preserve_order")]
 type MapVisitor<K, T> = linked_hash_map::serde::LinkedHashMapVisitor<K, T>;
 
-/// Represents a JSON value
+/// Represents a Hjson/JSON value
 #[derive(Clone, PartialEq)]
 pub enum Value {
     /// Represents a JSON null value
@@ -113,32 +113,6 @@ impl Value {
     pub fn find_path<'a>(&'a self, keys: &[&str]) -> Option<&'a Value> {
         let mut target = self;
         for key in keys {
-            match target.find(key) {
-                Some(t) => {
-                    target = t;
-                }
-                None => return None,
-            }
-        }
-        Some(target)
-    }
-
-    /// **Deprecated**: Use `Value.pointer()` and pointer syntax instead.
-    ///
-    /// Looks up a value by path.
-    ///
-    /// This is a convenience method that splits the path by `'.'`
-    /// and then feeds the sequence of keys into the `find_path`
-    /// method.
-    ///
-    /// ``` ignore
-    /// let obj: Value = json::from_str(r#"{"x": {"a": 1}}"#).unwrap();
-    ///
-    /// assert!(obj.lookup("x.a").unwrap() == &Value::U64(1));
-    /// ```
-    pub fn lookup<'a>(&'a self, path: &str) -> Option<&'a Value> {
-        let mut target = self;
-        for key in path.split('.') {
             match target.find(key) {
                 Some(t) => {
                     target = t;
@@ -495,7 +469,7 @@ impl<'a, 'b> io::Write for WriterFormatter<'a, 'b> {
 }
 
 impl fmt::Debug for Value {
-    /// Serializes a json value into a string
+    /// Serializes a Hjson value into a string
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut wr = WriterFormatter {
             inner: f,
@@ -505,7 +479,7 @@ impl fmt::Debug for Value {
 }
 
 impl fmt::Display for Value {
-    /// Serializes a json value into a string
+    /// Serializes a Hjson value into a string
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut wr = WriterFormatter {
             inner: f,
@@ -939,13 +913,13 @@ impl ser::Serializer for Serializer {
     }
 }
 
-/// Creates a `serde::Deserializer` from a `json::Value` object.
+/// Creates a `serde::Deserializer` from a `Value` object.
 pub struct Deserializer {
     value: Option<Value>,
 }
 
 impl Deserializer {
-    /// Creates a new deserializer instance for deserializing the specified JSON value.
+    /// Creates a new deserializer instance for deserializing the specified Hjson value.
     pub fn new(value: Value) -> Deserializer {
         Deserializer {
             value: Some(value),
@@ -1400,7 +1374,7 @@ impl<'a> de::Deserializer for MapDeserializer<'a> {
     }
 }
 
-/// Shortcut function to encode a `T` into a JSON `Value`
+/// Shortcut function to encode a `T` into a Hjson `Value`
 ///
 /// ```rust
 /// use serde_hjson::to_value;
@@ -1415,7 +1389,7 @@ pub fn to_value<T: ?Sized>(value: &T) -> Value
     ser.unwrap()
 }
 
-/// Shortcut function to decode a JSON `Value` into a `T`
+/// Shortcut function to decode a Hjson `Value` into a `T`
 pub fn from_value<T>(value: Value) -> Result<T, Error>
     where T: de::Deserialize,
 {
@@ -1423,9 +1397,9 @@ pub fn from_value<T>(value: Value) -> Result<T, Error>
     de::Deserialize::deserialize(&mut de)
 }
 
-/// A trait for converting values to JSON
+/// A trait for converting values to Hjson
 pub trait ToJson {
-    /// Converts the value of `self` to an instance of JSON
+    /// Converts the value of `self` to an instance of Hjson
     fn to_json(&self) -> Value;
 }
 
