@@ -84,7 +84,7 @@ pub enum ErrorCode {
     /// Unexpected end of hex excape.
     UnexpectedEndOfHexEscape,
 
-    /// Found a punctuator character when excpecting a quoteless string.
+    /// Found a punctuator character when expecting a quoteless string.
     PunctuatorInQlString,
 }
 
@@ -116,7 +116,7 @@ impl fmt::Debug for ErrorCode {
             ErrorCode::LoneLeadingSurrogateInHexEscape => "lone leading surrogate in hex escape".fmt(f),
             ErrorCode::TrailingCharacters => "trailing characters".fmt(f),
             ErrorCode::UnexpectedEndOfHexEscape => "unexpected end of hex escape".fmt(f),
-            ErrorCode::PunctuatorInQlString => "found a punctuator character when excpecting a quoteless string".fmt(f),
+            ErrorCode::PunctuatorInQlString => "found a punctuator character when expecting a quoteless string".fmt(f),
         }
     }
 }
