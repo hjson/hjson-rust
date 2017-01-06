@@ -822,20 +822,35 @@ pub fn from_iter<I, T>(iter: I) -> Result<T>
 
     let bytes = fold.unwrap();
 
+    // deserialize tries first to decode with legacy support (new_for_root)
+    // and then with the standard method if this fails.
+    // todo: add compile switch
+
     // deserialize and make sure the whole stream has been consumed
     let mut de = Deserializer::new_for_root(bytes.iter().map(|b| *b));
     let value = match de::Deserialize::deserialize(&mut de)
         .and_then(|x| { try!(de.end()); Ok(x) })
-     {
+    {
         Ok(v) => Ok(v),
-        Err(e) => {
+        Err(_) => {
             let mut de2 = Deserializer::new(bytes.iter().map(|b| *b));
             match de::Deserialize::deserialize(&mut de2).and_then(|x| { try!(de2.end()); Ok(x) }) {
                 Ok(v) => Ok(v),
-                Err(_) => Err(e),
+                Err(e) => Err(e),
             }
         }
     };
+
+    /* without legacy support:
+    // deserialize and make sure the whole stream has been consumed
+    let mut de = Deserializer::new(bytes.iter().map(|b| *b));
+    let value = match de::Deserialize::deserialize(&mut de)
+        .and_then(|x| { try!(de.end()); Ok(x) })
+    {
+        Ok(v) => Ok(v),
+        Err(e) => Err(e),
+    };
+    */
 
     value
 }
