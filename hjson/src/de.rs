@@ -459,41 +459,6 @@ impl<Iter> de::Deserializer for Deserializer<Iter>
         visitor.visit_newtype_struct(self)
     }
 
-    /// Parses an enum as an object like `{"$KEY":$VALUE}`, where $VALUE is either a straight
-    /// value, a `[..]`, or a `{..}`.
-    #[inline]
-    fn deserialize_enum<V>(&mut self,
-                     _name: &str,
-                     _variants: &'static [&'static str],
-                     mut visitor: V) -> Result<V::Value>
-        where V: de::EnumVisitor {
-        try!(self.rdr.parse_whitespace());
-
-        match try!(self.rdr.next_char_or_null()) {
-            b'{' => {
-                try!(self.rdr.parse_whitespace());
-
-                let value = {
-                    try!(visitor.visit(&mut *self))
-                };
-
-                try!(self.rdr.parse_whitespace());
-
-                match try!(self.rdr.next_char_or_null()) {
-                    b'}' => {
-                        Ok(value)
-                    }
-                    _ => {
-                        Err(self.rdr.error(ErrorCode::ExpectedSomeValue))
-                    }
-                }
-            }
-            _ => {
-                Err(self.rdr.error(ErrorCode::ExpectedSomeValue))
-            }
-        }
-    }
-
     forward_to_deserialize!{
         deserialize_bool();
         deserialize_usize();
@@ -521,6 +486,7 @@ impl<Iter> de::Deserializer for Deserializer<Iter>
         deserialize_struct(name: &'static str, fields: &'static [&'static str]);
         deserialize_struct_field();
         deserialize_tuple(len: usize);
+        deserialize_enum(name: &'static str, variants: &'static [&'static str]);
         deserialize_ignored_any();
     }
 }

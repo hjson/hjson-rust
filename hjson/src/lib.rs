@@ -16,58 +16,6 @@
 //! * `Object`: equivalent to rust's `serde_hjson::Map<String, serde_hjson::Value>`
 //! * `Null`
 //!
-//! # Sample
-//!
-//! ```ignore
-//! {
-//!     FirstName: John
-//!     LastName: Doe
-//!     Age: 43
-//!     Address: {
-//!         Street: Downing Street 10
-//!         City: London
-//!         Country: Great Britain
-//!     }
-//!     PhoneNumbers: [
-//!         +44 1234567
-//!         +44 2345678
-//!     ]
-//! }
-//! ```
-//!
-//! If we assume that FirstName is optional and all other fields are mandatory, the above Hjson could
-//! correspond to the following Rust structs:
-//!
-//! ```ignore
-//! #[derive(Serialize, Deserialize)]
-//! struct Data {
-//!     #[serde(rename="FirstName")] // to comply with Rust coding standards
-//!     first_name: Option<String>,
-//!     LastName: String,
-//!     Age: u32,
-//!     Address: Address,
-//!     PhoneNumbers: Vec<String>
-//! }
-//!
-//! #[derive(Serialize, Deserialize)]
-//! struct Address {
-//!     Street: String,
-//!     City: String,
-//!     Country: String
-//! }
-//! ```
-//!
-//! # Type-based Serialization and Deserialization
-//!
-//! Serde provides a mechanism for low boilerplate serialization & deserialization of values to and
-//! from Hjson via the serialization API.  To be able to serialize a piece of data, it must implement
-//! the `serde::Serialize` trait.  To be able to deserialize a piece of data, it must implement the
-//! `serde::Deserialize` trait.  Serde provides provides an annotation to automatically generate
-//! the code for these traits: `#[derive(Serialize, Deserialize)]`.
-//!
-//! The Hjson API also provides an enum `serde_hjson::Value` and a method `to_value` to serialize
-//! objects.  A `serde_hjson::Value` value can be serialized as a string or buffer using the
-//! functions described above.
 //!
 //! # Examples of use
 //!
