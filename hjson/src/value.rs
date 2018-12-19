@@ -1410,3 +1410,36 @@ impl<T: ?Sized> ToJson for T
         to_value(&self)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::Value;
+    use de::from_str;
+
+    #[test]
+    fn number_deserialize() {
+        let v: Value = from_str("{\"a\":1}").unwrap();
+        let vo = v.as_object().unwrap();
+        assert_eq!(vo["a"].as_u64().unwrap(), 1);
+
+        let v: Value = from_str("{\"a\":-1}").unwrap();
+        let vo = v.as_object().unwrap();
+        assert_eq!(vo["a"].as_i64().unwrap(), -1);
+
+        let v: Value = from_str("{\"a\":1.1}").unwrap();
+        let vo = v.as_object().unwrap();
+        assert_eq!(vo["a"].as_f64().unwrap(), 1.1);
+
+        let v: Value = from_str("{\"a\":-1.1}").unwrap();
+        let vo = v.as_object().unwrap();
+        assert_eq!(vo["a"].as_f64().unwrap(), -1.1);
+
+        let v: Value = from_str("{\"a\":1e6}").unwrap();
+        let vo = v.as_object().unwrap();
+        assert_eq!(vo["a"].as_f64().unwrap(), 1e6);
+
+        let v: Value = from_str("{\"a\":-1e6}").unwrap();
+        let vo = v.as_object().unwrap();
+        assert_eq!(vo["a"].as_f64().unwrap(), -1e6);
+    }
+}

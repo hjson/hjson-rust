@@ -46,7 +46,7 @@
 //!         println!("{}: {}", key, match *value {
 //!             Value::U64(v) => format!("{} (u64)", v),
 //!             Value::String(ref v) => format!("{} (string)", v),
-//!             _ => format!("other")
+//!             _ => unreachable!(),
 //!         });
 //!     }
 //!     // bar: baz (string)

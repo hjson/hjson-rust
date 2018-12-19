@@ -138,20 +138,26 @@ impl<Iter> StringReader<Iter>
     }
 }
 
+pub enum Number {
+    I64(i64),
+    U64(u64),
+    F64(f64),
+}
+
 
 pub struct ParseNumber<Iter: Iterator<Item=u8>> {
     rdr: StringReader<Iter>,
     result: Vec<u8>,
 }
 
-macro_rules! try_or_invalid {
-    ($e:expr) => {
-        match $e {
-            Some(v) => v,
-            None => { return Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0)); }
-        }
-    }
-}
+// macro_rules! try_or_invalid {
+//     ($e:expr) => {
+//         match $e {
+//             Some(v) => v,
+//             None => { return Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0)); }
+//         }
+//     }
+// }
 
 impl<Iter: Iterator<Item=u8>> ParseNumber<Iter> {
 
@@ -163,7 +169,7 @@ impl<Iter: Iterator<Item=u8>> ParseNumber<Iter> {
         }
     }
 
-    pub fn parse(&mut self, stop_at_next: bool) -> Result<f64> {
+    pub fn parse(&mut self, stop_at_next: bool) -> Result<Number> {
 
         match self.try_parse() {
             Ok(()) => {
@@ -184,9 +190,26 @@ impl<Iter: Iterator<Item=u8>> ParseNumber<Iter> {
                 match ch {
                     b'\x00' => {
                         let res = str::from_utf8(&self.result).unwrap();
-                        return Ok(res.parse::<f64>().unwrap());
+
+                        let mut is_float = false;
+                        for ch in res.chars() {
+                            if ch == '.' || ch == 'e' || ch == 'E' {
+                                is_float = true;
+                                break;
+                            }
+                        }
+
+                        if is_float {
+                            Ok(Number::F64(res.parse::<f64>().unwrap()))
+                        } else {
+                            if res.starts_with("-") {
+                                Ok(Number::I64(res.parse::<i64>().unwrap()))
+                            } else {
+                                Ok(Number::U64(res.parse::<u64>().unwrap()))
+                            }
+                        }
                     },
-                    _ => { return Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0)); },
+                    _ => { Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0)) },
                 }
             },
             Err(e) => Err(e),
