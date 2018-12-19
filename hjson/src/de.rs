@@ -11,7 +11,7 @@ use serde::de;
 
 use super::error::{Error, ErrorCode, Result};
 use super::util::StringReader;
-use super::util::ParseNumber;
+use super::util::{ParseNumber, Number};
 
 enum State {
     Normal,
@@ -26,14 +26,14 @@ pub struct Deserializer<Iter: Iterator<Item=u8>> {
     state: State,
 }
 
-macro_rules! try_or_invalid {
-    ($self_:expr, $e:expr) => {
-        match $e {
-            Some(v) => v,
-            None => { return Err($self_.error(ErrorCode::InvalidNumber)); }
-        }
-    }
-}
+// macro_rules! try_or_invalid {
+//     ($self_:expr, $e:expr) => {
+//         match $e {
+//             Some(v) => v,
+//             None => { return Err($self_.error(ErrorCode::InvalidNumber)); }
+//         }
+//     }
+// }
 
 impl<Iter> Deserializer<Iter>
     where Iter: Iterator<Item=u8>,
@@ -208,7 +208,18 @@ impl<Iter> Deserializer<Iter>
                         if chf == b'-' || chf >= b'0' && chf <= b'9' {
                             let mut pn = ParseNumber::new(self.str_buf.iter().map(|b| *b));
                             match pn.parse(false) {
-                                Ok(v) => { self.rdr.uneat_char(ch); return visitor.visit_f64(v); },
+                                Ok(Number::F64(v)) => {
+                                    self.rdr.uneat_char(ch);
+                                    return visitor.visit_f64(v);
+                                },
+                                Ok(Number::U64(v)) => {
+                                    self.rdr.uneat_char(ch);
+                                    return visitor.visit_u64(v);
+                                },
+                                Ok(Number::I64(v)) => {
+                                    self.rdr.uneat_char(ch);
+                                    return visitor.visit_i64(v);
+                                }
                                 Err(_) => {} // not a number, continue
                             }
                         }
