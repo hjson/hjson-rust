@@ -1,4 +1,5 @@
 #[macro_export]
+/// Create a function to forward a specific serialize call to the generic deserialize
 macro_rules! forward_to_deserialize {
     ($(
         $name:ident ( $( $arg:ident : $ty:ty ),* );

@@ -641,7 +641,6 @@ impl<'a, Iter> de::MapVisitor for MapVisitor<'a, Iter>
 
     fn missing_field<V>(&mut self, field: &'static str) -> Result<V>
         where V: de::Deserialize {
-        use std;
 
         struct MissingFieldDeserializer(&'static str);
 
