@@ -132,7 +132,7 @@ where
                             self.eat_char();
                         }
                         Some(_) => {
-                            self.eat_char();
+                            return Ok(());
                         }
                         None => return Err(self.error(ErrorCode::TrailingCharacters)), //todo
                     }
