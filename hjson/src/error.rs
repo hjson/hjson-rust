@@ -8,6 +8,7 @@ use std::fmt;
 use std::io;
 use std::result;
 use std::string::FromUtf8Error;
+use std::num::ParseIntError;
 
 use serde::de;
 use serde::ser;
@@ -133,6 +134,9 @@ pub enum Error {
 
     /// Some UTF8 error occurred while serializing or deserializing a value.
     FromUtf8(FromUtf8Error),
+
+    /// Some error occurred while deserializing a number.
+    ParseIntError(ParseIntError),
 }
 
 impl error::Error for Error {
@@ -141,6 +145,7 @@ impl error::Error for Error {
             Error::Syntax(..) => "syntax error",
             Error::Io(ref error) => error::Error::description(error),
             Error::FromUtf8(ref error) => error.description(),
+            Error::ParseIntError(ref error) => error.description(),
         }
     }
 
@@ -148,6 +153,7 @@ impl error::Error for Error {
         match *self {
             Error::Io(ref error) => Some(error),
             Error::FromUtf8(ref error) => Some(error),
+            Error::ParseIntError(ref error) => Some(error),
             _ => None,
         }
     }
@@ -162,6 +168,7 @@ impl fmt::Display for Error {
             }
             Error::Io(ref error) => fmt::Display::fmt(error, fmt),
             Error::FromUtf8(ref error) => fmt::Display::fmt(error, fmt),
+            Error::ParseIntError(ref error) => fmt::Display::fmt(error, fmt),
         }
     }
 }
@@ -206,6 +213,12 @@ impl From<de::value::Error> for Error {
                 Error::Syntax(ErrorCode::MissingField(field), 0, 0)
             }
         }
+    }
+}
+
+impl From<ParseIntError> for Error {
+    fn from(error: ParseIntError) -> Error {
+        Error::ParseIntError(error)
     }
 }
 

@@ -203,9 +203,9 @@ impl<Iter: Iterator<Item=u8>> ParseNumber<Iter> {
                             Ok(Number::F64(res.parse::<f64>().unwrap()))
                         } else {
                             if res.starts_with("-") {
-                                Ok(Number::I64(res.parse::<i64>().unwrap()))
+                                Ok(Number::I64(try!(res.parse::<i64>())))
                             } else {
-                                Ok(Number::U64(res.parse::<u64>().unwrap()))
+                                Ok(Number::U64(try!(res.parse::<u64>())))
                             }
                         }
                     },
