@@ -3,7 +3,7 @@
 [![Build Status](https://img.shields.io/travis/hjson/hjson-rust.svg?style=flat-square)](http://travis-ci.org/hjson/hjson-rust)
 [![crate](https://img.shields.io/crates/v/serde-hjson.svg?style=flat-square)](https://crates.io/crates/serde-hjson)
 
-![Hjson Intro](http://hjson.org/hjson1.gif)
+![Hjson Intro](https://hjson.github.io/hjson1.gif)
 
 ```
 {
@@ -24,9 +24,9 @@
 }
 ```
 
-The Rust implementation of Hjson is based on the [Serde JSON Serialization Library](https://github.com/serde-rs/json). For other platforms see [hjson.org](http://hjson.org).
+The Rust implementation of Hjson is based on the [Serde JSON Serialization Library](https://github.com/serde-rs/json). For other platforms see [hjson.github.io](https://hjson.github.io).
 
-This crate is a Rust library for parsing and generating Human JSON [Hjson](http://hjson.org). It is built upon [Serde](https://github.com/serde-rs/serde), a high performance generic serialization framework.
+This crate is a Rust library for parsing and generating Human JSON [Hjson](https://hjson.github.io). It is built upon [Serde](https://github.com/serde-rs/serde), a high performance generic serialization framework.
 
 # Install
 
