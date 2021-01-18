@@ -148,7 +148,7 @@ impl error::Error for Error {
         }
     }
 
-    fn cause(&self) -> Option<&error::Error> {
+    fn cause(&self) -> Option<&dyn error::Error> {
         match *self {
             Error::Io(ref error) => Some(error),
             Error::FromUtf8(ref error) => Some(error),
