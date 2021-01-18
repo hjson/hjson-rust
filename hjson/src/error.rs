@@ -113,10 +113,14 @@ impl fmt::Debug for ErrorCode {
             ErrorCode::InvalidNumber => "invalid number".fmt(f),
             ErrorCode::InvalidUnicodeCodePoint => "invalid unicode code point".fmt(f),
             ErrorCode::KeyMustBeAString => "key must be a string".fmt(f),
-            ErrorCode::LoneLeadingSurrogateInHexEscape => "lone leading surrogate in hex escape".fmt(f),
+            ErrorCode::LoneLeadingSurrogateInHexEscape => {
+                "lone leading surrogate in hex escape".fmt(f)
+            }
             ErrorCode::TrailingCharacters => "trailing characters".fmt(f),
             ErrorCode::UnexpectedEndOfHexEscape => "unexpected end of hex escape".fmt(f),
-            ErrorCode::PunctuatorInQlString => "found a punctuator character when expecting a quoteless string".fmt(f),
+            ErrorCode::PunctuatorInQlString => {
+                "found a punctuator character when expecting a quoteless string".fmt(f)
+            }
         }
     }
 }
@@ -151,7 +155,6 @@ impl error::Error for Error {
             _ => None,
         }
     }
-
 }
 
 impl fmt::Display for Error {
@@ -181,15 +184,9 @@ impl From<FromUtf8Error> for Error {
 impl From<de::value::Error> for Error {
     fn from(error: de::value::Error) -> Error {
         match error {
-            de::value::Error::Custom(e) => {
-                Error::Syntax(ErrorCode::Custom(e), 0, 0)
-            }
-            de::value::Error::EndOfStream => {
-                de::Error::end_of_stream()
-            }
-            de::value::Error::InvalidType(ty) => {
-                Error::Syntax(ErrorCode::InvalidType(ty), 0, 0)
-            }
+            de::value::Error::Custom(e) => Error::Syntax(ErrorCode::Custom(e), 0, 0),
+            de::value::Error::EndOfStream => de::Error::end_of_stream(),
+            de::value::Error::InvalidType(ty) => Error::Syntax(ErrorCode::InvalidType(ty), 0, 0),
             de::value::Error::InvalidValue(msg) => {
                 Error::Syntax(ErrorCode::InvalidValue(msg), 0, 0)
             }

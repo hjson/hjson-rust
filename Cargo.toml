@@ -1,0 +1,2 @@
+[workspace]
+members = ["hjson", "hjson_cli", "hjson_tests"]

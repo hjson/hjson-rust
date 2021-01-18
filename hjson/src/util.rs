@@ -1,10 +1,9 @@
-
-use std::str;
 use std::io;
+use std::str;
 
 use super::error::{Error, ErrorCode, Result};
 
-pub struct StringReader<Iter: Iterator<Item=u8>> {
+pub struct StringReader<Iter: Iterator<Item = u8>> {
     iter: Iter,
     line: usize,
     col: usize,
@@ -12,8 +11,9 @@ pub struct StringReader<Iter: Iterator<Item=u8>> {
 }
 
 impl<Iter> StringReader<Iter>
-    where Iter: Iterator<Item=u8> {
-
+where
+    Iter: Iterator<Item = u8>,
+{
     #[inline]
     pub fn new(iter: Iter) -> Self {
         StringReader {
@@ -31,11 +31,11 @@ impl<Iter> StringReader<Iter>
                 self.line += 1;
                 self.col = 0;
                 Some(Ok(b'\n'))
-            },
+            }
             Some(c) => {
                 self.col += 1;
                 Some(Ok(c))
-            },
+            }
         }
     }
 
@@ -80,14 +80,15 @@ impl<Iter> StringReader<Iter>
 
     pub fn next_char(&mut self) -> Result<Option<u8>> {
         match self.ch.first() {
-            Some(&ch) => { self.eat_char(); Ok(Some(ch)) },
-            None => {
-                match self.next() {
-                    Some(Err(err)) => Err(Error::Io(err)),
-                    Some(Ok(ch)) => Ok(Some(ch)),
-                    None => Ok(None),
-                }
+            Some(&ch) => {
+                self.eat_char();
+                Ok(Some(ch))
             }
+            None => match self.next() {
+                Some(Err(err)) => Err(Error::Io(err)),
+                Some(Ok(ch)) => Ok(Some(ch)),
+                None => Ok(None),
+            },
         }
     }
 
@@ -99,7 +100,7 @@ impl<Iter> StringReader<Iter>
         loop {
             match try!(self.peek()) {
                 Some(b'\n') | None => return Ok(()),
-                _ => {},
+                _ => {}
             }
             self.eat_char();
         }
@@ -118,17 +119,23 @@ impl<Iter> StringReader<Iter>
                         Some(b'*') => {
                             self.eat_char();
                             self.eat_char();
-                            while !(try!(self.peek()).unwrap_or(b'*') == b'*' && try!(self.peek_next(1)).unwrap_or(b'/') == b'/') {
+                            while !(try!(self.peek()).unwrap_or(b'*') == b'*'
+                                && try!(self.peek_next(1)).unwrap_or(b'/') == b'/')
+                            {
                                 self.eat_char();
                             }
                             self.eat_char();
                             self.eat_char();
-                        },
-                        Some(_) => { self.eat_char(); },
+                        }
+                        Some(_) => {
+                            self.eat_char();
+                        }
                         None => return Err(self.error(ErrorCode::TrailingCharacters)), //todo
                     }
                 }
-                _ => { return Ok(()); },
+                _ => {
+                    return Ok(());
+                }
             }
         }
     }
@@ -144,8 +151,7 @@ pub enum Number {
     F64(f64),
 }
 
-
-pub struct ParseNumber<Iter: Iterator<Item=u8>> {
+pub struct ParseNumber<Iter: Iterator<Item = u8>> {
     rdr: StringReader<Iter>,
     result: Vec<u8>,
 }
@@ -159,8 +165,7 @@ pub struct ParseNumber<Iter: Iterator<Item=u8>> {
 //     }
 // }
 
-impl<Iter: Iterator<Item=u8>> ParseNumber<Iter> {
-
+impl<Iter: Iterator<Item = u8>> ParseNumber<Iter> {
     #[inline]
     pub fn new(iter: Iter) -> Self {
         ParseNumber {
@@ -170,10 +175,8 @@ impl<Iter: Iterator<Item=u8>> ParseNumber<Iter> {
     }
 
     pub fn parse(&mut self, stop_at_next: bool) -> Result<Number> {
-
         match self.try_parse() {
             Ok(()) => {
-
                 try!(self.rdr.parse_whitespace());
 
                 let mut ch = try!(self.rdr.next_char_or_null());
@@ -181,8 +184,12 @@ impl<Iter: Iterator<Item=u8>> ParseNumber<Iter> {
                 if stop_at_next {
                     let ch2 = try!(self.rdr.peek_or_null());
                     // end scan if we find a punctuator character like ,}] or a comment
-                    if ch == b',' || ch == b'}' || ch == b']' ||
-                       ch == b'#' || ch == b'/' && (ch2 == b'/' || ch2 == b'*') {
+                    if ch == b','
+                        || ch == b'}'
+                        || ch == b']'
+                        || ch == b'#'
+                        || ch == b'/' && (ch2 == b'/' || ch2 == b'*')
+                    {
                         ch = b'\x00';
                     }
                 }
@@ -208,10 +215,10 @@ impl<Iter: Iterator<Item=u8>> ParseNumber<Iter> {
                                 Ok(Number::U64(res.parse::<u64>().unwrap()))
                             }
                         }
-                    },
-                    _ => { Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0)) },
+                    }
+                    _ => Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0)),
                 }
-            },
+            }
             Err(e) => Err(e),
         }
     }
@@ -228,31 +235,37 @@ impl<Iter: Iterator<Item=u8>> ParseNumber<Iter> {
             has_value = true;
             // There can be only one leading '0'.
             match try!(self.rdr.peek_or_null()) {
-                b'0' ... b'9' => {
+                b'0'...b'9' => {
                     return Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0));
                 }
-                _ => { }
+                _ => {}
             }
         }
 
         loop {
             match try!(self.rdr.peek_or_null()) {
-                b'0' ... b'9' => {
+                b'0'...b'9' => {
                     self.result.push(self.rdr.eat_char());
                     has_value = true;
                 }
                 b'.' => {
-                    if !has_value { return Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0)); }
+                    if !has_value {
+                        return Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0));
+                    }
                     self.rdr.eat_char();
                     return self.try_decimal();
                 }
                 b'e' | b'E' => {
-                    if !has_value { return Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0)); }
+                    if !has_value {
+                        return Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0));
+                    }
                     self.rdr.eat_char();
                     return self.try_exponent();
                 }
                 _ => {
-                    if !has_value { return Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0)); }
+                    if !has_value {
+                        return Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0));
+                    }
                     return Ok(());
                 }
             }
@@ -260,48 +273,69 @@ impl<Iter: Iterator<Item=u8>> ParseNumber<Iter> {
     }
 
     fn try_decimal(&mut self) -> Result<()> {
-
         self.result.push(b'.');
 
         // Make sure a digit follows the decimal place.
         match try!(self.rdr.next_char_or_null()) {
-            c @ b'0' ... b'9' => { self.result.push(c); }
-             _ => { return Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0)); }
+            c @ b'0'...b'9' => {
+                self.result.push(c);
+            }
+            _ => {
+                return Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0));
+            }
         };
 
         loop {
             match try!(self.rdr.peek_or_null()) {
-                b'0' ... b'9' => { self.result.push(self.rdr.eat_char()); }
-                _ => { break; }
+                b'0'...b'9' => {
+                    self.result.push(self.rdr.eat_char());
+                }
+                _ => {
+                    break;
+                }
             }
         }
 
         match try!(self.rdr.peek_or_null()) {
-            b'e' | b'E' => { self.rdr.eat_char(); self.try_exponent() },
-            _ => Ok(())
+            b'e' | b'E' => {
+                self.rdr.eat_char();
+                self.try_exponent()
+            }
+            _ => Ok(()),
         }
     }
 
     fn try_exponent(&mut self) -> Result<()> {
-
         self.result.push(b'e');
 
         match try!(self.rdr.peek_or_null()) {
-            b'+' => { self.result.push(self.rdr.eat_char()); }
-            b'-' => { self.result.push(self.rdr.eat_char()); }
-            _ => { }
+            b'+' => {
+                self.result.push(self.rdr.eat_char());
+            }
+            b'-' => {
+                self.result.push(self.rdr.eat_char());
+            }
+            _ => {}
         };
 
         // Make sure a digit follows the exponent place.
         match try!(self.rdr.next_char_or_null()) {
-            c @ b'0' ... b'9' => { self.result.push(c); }
-            _ => { return Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0)); }
+            c @ b'0'...b'9' => {
+                self.result.push(c);
+            }
+            _ => {
+                return Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0));
+            }
         };
 
         loop {
             match try!(self.rdr.peek_or_null()) {
-                b'0' ... b'9' => { self.result.push(self.rdr.eat_char()); }
-                _ => { break; }
+                b'0'...b'9' => {
+                    self.result.push(self.rdr.eat_char());
+                }
+                _ => {
+                    break;
+                }
             }
         }
 

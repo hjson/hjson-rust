@@ -57,31 +57,22 @@
 #![cfg_attr(feature = "nightly-testing", plugin(clippy))]
 #![deny(missing_docs)]
 
-#[macro_use] extern crate lazy_static;
+#[macro_use]
+extern crate lazy_static;
 
+extern crate core;
 #[cfg(feature = "preserve_order")]
 extern crate linked_hash_map;
-extern crate core;
 extern crate num_traits;
 extern crate regex;
 extern crate serde;
 
 pub use self::de::{
-    Deserializer,
-    StreamDeserializer,
-    from_iter,
-    from_reader,
-    from_slice,
-    from_str,
+    from_iter, from_reader, from_slice, from_str, Deserializer, StreamDeserializer,
 };
 pub use self::error::{Error, ErrorCode, Result};
-pub use self::ser::{
-    Serializer,
-    to_writer,
-    to_vec,
-    to_string,
-};
-pub use self::value::{Value, Map, to_value, from_value};
+pub use self::ser::{to_string, to_vec, to_writer, Serializer};
+pub use self::value::{from_value, to_value, Map, Value};
 
 #[macro_use]
 mod forward;

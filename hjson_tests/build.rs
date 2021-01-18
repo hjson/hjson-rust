@@ -2,9 +2,9 @@ extern crate skeptic;
 
 #[cfg(feature = "with-syntex")]
 mod with_syntex {
-    extern crate syntex;
-    extern crate serde_codegen;
     extern crate quasi_codegen;
+    extern crate serde_codegen;
+    extern crate syntex;
 
     use std::env;
     use std::path::Path;

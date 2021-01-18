@@ -33,7 +33,7 @@
 //! ```
 
 #[cfg(not(feature = "preserve_order"))]
-use std::collections::{BTreeMap, btree_map};
+use std::collections::{btree_map, BTreeMap};
 
 #[cfg(feature = "preserve_order")]
 use linked_hash_map::{self, LinkedHashMap};
@@ -152,9 +152,7 @@ impl Value {
             let token = escaped_token.replace("~1", "/").replace("~0", "~");
             let target_opt = match *target {
                 Value::Object(ref map) => map.get(&token[..]),
-                Value::Array(ref list) => {
-                    parse_index(&token[..]).and_then(|x| list.get(x))
-                }
+                Value::Array(ref list) => parse_index(&token[..]).and_then(|x| list.get(x)),
                 _ => return None,
             };
             if let Some(t) = target_opt {
@@ -171,20 +169,18 @@ impl Value {
     /// or the `Value` is not an Object, returns None.
     pub fn search<'a>(&'a self, key: &str) -> Option<&'a Value> {
         match *self {
-            Value::Object(ref map) => {
-                match map.get(key) {
-                    Some(json_value) => Some(json_value),
-                    None => {
-                        for (_, v) in map.iter() {
-                            match v.search(key) {
-                                x if x.is_some() => return x,
-                                _ => (),
-                            }
+            Value::Object(ref map) => match map.get(key) {
+                Some(json_value) => Some(json_value),
+                None => {
+                    for (_, v) in map.iter() {
+                        match v.search(key) {
+                            x if x.is_some() => return x,
+                            _ => (),
                         }
-                        None
                     }
+                    None
                 }
-            }
+            },
             _ => None,
         }
     }
@@ -344,7 +340,8 @@ impl Value {
 impl ser::Serialize for Value {
     #[inline]
     fn serialize<S>(&self, serializer: &mut S) -> Result<(), S::Error>
-        where S: ser::Serializer,
+    where
+        S: ser::Serializer,
     {
         match *self {
             Value::Null => serializer.serialize_unit(),
@@ -362,7 +359,8 @@ impl ser::Serialize for Value {
 impl de::Deserialize for Value {
     #[inline]
     fn deserialize<D>(deserializer: &mut D) -> Result<Value, D::Error>
-        where D: de::Deserializer,
+    where
+        D: de::Deserializer,
     {
         struct ValueVisitor;
 
@@ -395,7 +393,8 @@ impl de::Deserialize for Value {
 
             #[inline]
             fn visit_str<E>(&mut self, value: &str) -> Result<Value, E>
-                where E: de::Error,
+            where
+                E: de::Error,
             {
                 self.visit_string(String::from(value))
             }
@@ -411,11 +410,9 @@ impl de::Deserialize for Value {
             }
 
             #[inline]
-            fn visit_some<D>(
-                &mut self,
-                deserializer: &mut D
-            ) -> Result<Value, D::Error>
-                where D: de::Deserializer,
+            fn visit_some<D>(&mut self, deserializer: &mut D) -> Result<Value, D::Error>
+            where
+                D: de::Deserializer,
             {
                 de::Deserialize::deserialize(deserializer)
             }
@@ -427,16 +424,17 @@ impl de::Deserialize for Value {
 
             #[inline]
             fn visit_seq<V>(&mut self, visitor: V) -> Result<Value, V::Error>
-                where V: de::SeqVisitor,
+            where
+                V: de::SeqVisitor,
             {
-                let values = try!(de::impls::VecVisitor::new()
-                    .visit_seq(visitor));
+                let values = try!(de::impls::VecVisitor::new().visit_seq(visitor));
                 Ok(Value::Array(values))
             }
 
             #[inline]
             fn visit_map<V>(&mut self, visitor: V) -> Result<Value, V::Error>
-                where V: de::MapVisitor,
+            where
+                V: de::MapVisitor,
             {
                 let values = try!(MapVisitor::new().visit_map(visitor));
                 Ok(Value::Object(values))
@@ -471,9 +469,7 @@ impl<'a, 'b> io::Write for WriterFormatter<'a, 'b> {
 impl fmt::Debug for Value {
     /// Serializes a Hjson value into a string
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut wr = WriterFormatter {
-            inner: f,
-        };
+        let mut wr = WriterFormatter { inner: f };
         super::ser::to_writer(&mut wr, self).map_err(|_| fmt::Error)
     }
 }
@@ -481,9 +477,7 @@ impl fmt::Debug for Value {
 impl fmt::Display for Value {
     /// Serializes a Hjson value into a string
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut wr = WriterFormatter {
-            inner: f,
-        };
+        let mut wr = WriterFormatter { inner: f };
         super::ser::to_writer(&mut wr, self).map_err(|_| fmt::Error)
     }
 }
@@ -503,9 +497,7 @@ pub struct Serializer {
 impl Serializer {
     /// Construct a new `Serializer`.
     pub fn new() -> Serializer {
-        Serializer {
-            value: Value::Null,
-        }
+        Serializer { value: Value::Null }
     }
 
     /// Unwrap the `Serializer` and return the `Value`.
@@ -648,10 +640,7 @@ impl ser::Serializer for Serializer {
     }
 
     #[inline]
-    fn serialize_unit_struct(
-        &mut self,
-        _name: &'static str
-    ) -> Result<(), Error> {
+    fn serialize_unit_struct(&mut self, _name: &'static str) -> Result<(), Error> {
         self.serialize_unit()
     }
 
@@ -660,18 +649,15 @@ impl ser::Serializer for Serializer {
         &mut self,
         _name: &'static str,
         _variant_index: usize,
-        variant: &'static str
+        variant: &'static str,
     ) -> Result<(), Error> {
         self.serialize_str(variant)
     }
 
     #[inline]
-    fn serialize_newtype_struct<T>(
-        &mut self,
-        _name: &'static str,
-        value: T
-    ) -> Result<(), Error>
-        where T: ser::Serialize,
+    fn serialize_newtype_struct<T>(&mut self, _name: &'static str, value: T) -> Result<(), Error>
+    where
+        T: ser::Serialize,
     {
         value.serialize(self)
     }
@@ -681,9 +667,10 @@ impl ser::Serializer for Serializer {
         _name: &'static str,
         _variant_index: usize,
         variant: &'static str,
-        value: T
+        value: T,
     ) -> Result<(), Error>
-        where T: ser::Serialize,
+    where
+        T: ser::Serialize,
     {
         let mut values = Map::new();
         values.insert(String::from(variant), to_value(&value));
@@ -698,24 +685,23 @@ impl ser::Serializer for Serializer {
 
     #[inline]
     fn serialize_some<V>(&mut self, value: V) -> Result<(), Error>
-        where V: ser::Serialize,
+    where
+        V: ser::Serialize,
     {
         value.serialize(self)
     }
 
-    fn serialize_seq(
-        &mut self,
-        len: Option<usize>
-    ) -> Result<Vec<Value>, Error> {
+    fn serialize_seq(&mut self, len: Option<usize>) -> Result<Vec<Value>, Error> {
         Ok(Vec::with_capacity(len.unwrap_or(0)))
     }
 
     fn serialize_seq_elt<T: ser::Serialize>(
         &mut self,
         state: &mut Vec<Value>,
-        value: T
+        value: T,
     ) -> Result<(), Error>
-        where T: ser::Serialize,
+    where
+        T: ser::Serialize,
     {
         state.push(to_value(&value));
         Ok(())
@@ -726,10 +712,7 @@ impl ser::Serializer for Serializer {
         Ok(())
     }
 
-    fn serialize_seq_fixed_size(
-        &mut self,
-        size: usize
-    ) -> Result<Vec<Value>, Error> {
+    fn serialize_seq_fixed_size(&mut self, size: usize) -> Result<Vec<Value>, Error> {
         self.serialize_seq(Some(size))
     }
 
@@ -740,7 +723,7 @@ impl ser::Serializer for Serializer {
     fn serialize_tuple_elt<T: ser::Serialize>(
         &mut self,
         state: &mut Vec<Value>,
-        value: T
+        value: T,
     ) -> Result<(), Error> {
         self.serialize_seq_elt(state, value)
     }
@@ -752,7 +735,7 @@ impl ser::Serializer for Serializer {
     fn serialize_tuple_struct(
         &mut self,
         _name: &'static str,
-        len: usize
+        len: usize,
     ) -> Result<Vec<Value>, Error> {
         self.serialize_seq(Some(len))
     }
@@ -760,15 +743,12 @@ impl ser::Serializer for Serializer {
     fn serialize_tuple_struct_elt<T: ser::Serialize>(
         &mut self,
         state: &mut Vec<Value>,
-        value: T
+        value: T,
     ) -> Result<(), Error> {
         self.serialize_seq_elt(state, value)
     }
 
-    fn serialize_tuple_struct_end(
-        &mut self,
-        state: Vec<Value>
-    ) -> Result<(), Error> {
+    fn serialize_tuple_struct_end(&mut self, state: Vec<Value>) -> Result<(), Error> {
         self.serialize_seq_end(state)
     }
 
@@ -777,7 +757,7 @@ impl ser::Serializer for Serializer {
         _name: &'static str,
         _variant_index: usize,
         variant: &'static str,
-        len: usize
+        len: usize,
     ) -> Result<TupleVariantState, Error> {
         Ok(TupleVariantState {
             name: String::from(variant),
@@ -788,16 +768,13 @@ impl ser::Serializer for Serializer {
     fn serialize_tuple_variant_elt<T: ser::Serialize>(
         &mut self,
         state: &mut TupleVariantState,
-        value: T
+        value: T,
     ) -> Result<(), Error> {
         state.vec.push(to_value(&value));
         Ok(())
     }
 
-    fn serialize_tuple_variant_end(
-        &mut self,
-        state: TupleVariantState
-    ) -> Result<(), Error> {
+    fn serialize_tuple_variant_end(&mut self, state: TupleVariantState) -> Result<(), Error> {
         let mut object = Map::new();
 
         object.insert(state.name, Value::Array(state.vec));
@@ -806,10 +783,7 @@ impl ser::Serializer for Serializer {
         Ok(())
     }
 
-    fn serialize_map(
-        &mut self,
-        _len: Option<usize>
-    ) -> Result<MapState, Error> {
+    fn serialize_map(&mut self, _len: Option<usize>) -> Result<MapState, Error> {
         Ok(MapState {
             map: Map::new(),
             next_key: None,
@@ -836,27 +810,26 @@ impl ser::Serializer for Serializer {
         match state.next_key.take() {
             Some(key) => state.map.insert(key, to_value(&value)),
             None => {
-                return Err(Error::Syntax(ErrorCode::Custom("serialize_map_value without \
-                                                            matching serialize_map_key".to_owned()),
-                                         0, 0));
+                return Err(Error::Syntax(
+                    ErrorCode::Custom(
+                        "serialize_map_value without \
+                                                            matching serialize_map_key"
+                            .to_owned(),
+                    ),
+                    0,
+                    0,
+                ));
             }
         };
         Ok(())
     }
 
-    fn serialize_map_end(
-        &mut self,
-        state: MapState,
-    ) -> Result<(), Error> {
+    fn serialize_map_end(&mut self, state: MapState) -> Result<(), Error> {
         self.value = Value::Object(state.map);
         Ok(())
     }
 
-    fn serialize_struct(
-        &mut self,
-        _name: &'static str,
-        len: usize
-    ) -> Result<MapState, Error> {
+    fn serialize_struct(&mut self, _name: &'static str, len: usize) -> Result<MapState, Error> {
         self.serialize_map(Some(len))
     }
 
@@ -864,16 +837,13 @@ impl ser::Serializer for Serializer {
         &mut self,
         state: &mut MapState,
         key: &'static str,
-        value: V
+        value: V,
     ) -> Result<(), Error> {
         try!(self.serialize_map_key(state, key));
         self.serialize_map_value(state, value)
     }
 
-    fn serialize_struct_end(
-        &mut self,
-        state: MapState
-    ) -> Result<(), Error> {
+    fn serialize_struct_end(&mut self, state: MapState) -> Result<(), Error> {
         self.serialize_map_end(state)
     }
 
@@ -882,7 +852,7 @@ impl ser::Serializer for Serializer {
         _name: &'static str,
         _variant_index: usize,
         variant: &'static str,
-        _len: usize
+        _len: usize,
     ) -> Result<StructVariantState, Error> {
         Ok(StructVariantState {
             name: String::from(variant),
@@ -894,16 +864,13 @@ impl ser::Serializer for Serializer {
         &mut self,
         state: &mut StructVariantState,
         key: &'static str,
-        value: V
+        value: V,
     ) -> Result<(), Error> {
         state.map.insert(String::from(key), to_value(&value));
         Ok(())
     }
 
-    fn serialize_struct_variant_end(
-        &mut self,
-        state: StructVariantState
-    ) -> Result<(), Error> {
+    fn serialize_struct_variant_end(&mut self, state: StructVariantState) -> Result<(), Error> {
         let mut object = Map::new();
 
         object.insert(state.name, Value::Object(state.map));
@@ -921,9 +888,7 @@ pub struct Deserializer {
 impl Deserializer {
     /// Creates a new deserializer instance for deserializing the specified Hjson value.
     pub fn new(value: Value) -> Deserializer {
-        Deserializer {
-            value: Some(value),
-        }
+        Deserializer { value: Some(value) }
     }
 }
 
@@ -932,7 +897,8 @@ impl de::Deserializer for Deserializer {
 
     #[inline]
     fn deserialize<V>(&mut self, mut visitor: V) -> Result<V::Value, Error>
-        where V: de::Visitor,
+    where
+        V: de::Visitor,
     {
         let value = match self.value.take() {
             Some(value) => value,
@@ -969,11 +935,9 @@ impl de::Deserializer for Deserializer {
     }
 
     #[inline]
-    fn deserialize_option<V>(
-        &mut self,
-        mut visitor: V
-    ) -> Result<V::Value, Error>
-        where V: de::Visitor,
+    fn deserialize_option<V>(&mut self, mut visitor: V) -> Result<V::Value, Error>
+    where
+        V: de::Visitor,
     {
         match self.value {
             Some(Value::Null) => visitor.visit_none(),
@@ -987,9 +951,10 @@ impl de::Deserializer for Deserializer {
         &mut self,
         _name: &str,
         _variants: &'static [&'static str],
-        mut visitor: V
+        mut visitor: V,
     ) -> Result<V::Value, Error>
-        where V: de::EnumVisitor,
+    where
+        V: de::EnumVisitor,
     {
         let (variant, value) = match self.value.take() {
             Some(Value::Object(value)) => {
@@ -1026,14 +991,15 @@ impl de::Deserializer for Deserializer {
     fn deserialize_newtype_struct<V>(
         &mut self,
         _name: &'static str,
-        mut visitor: V
+        mut visitor: V,
     ) -> Result<V::Value, Self::Error>
-        where V: de::Visitor,
+    where
+        V: de::Visitor,
     {
         visitor.visit_newtype_struct(self)
     }
 
-    forward_to_deserialize!{
+    forward_to_deserialize! {
         deserialize_bool();
         deserialize_usize();
         deserialize_u8();
@@ -1074,7 +1040,8 @@ impl<'a> de::VariantVisitor for VariantDeserializer<'a> {
     type Error = Error;
 
     fn visit_variant<V>(&mut self) -> Result<V, Error>
-        where V: de::Deserialize,
+    where
+        V: de::Deserialize,
     {
         let variant = self.variant.take().expect("variant is missing");
         de::Deserialize::deserialize(&mut Deserializer::new(variant))
@@ -1082,35 +1049,33 @@ impl<'a> de::VariantVisitor for VariantDeserializer<'a> {
 
     fn visit_unit(&mut self) -> Result<(), Error> {
         match self.val.take() {
-            Some(val) => {
-                de::Deserialize::deserialize(&mut Deserializer::new(val))
-            }
+            Some(val) => de::Deserialize::deserialize(&mut Deserializer::new(val)),
             None => Ok(()),
         }
     }
 
     fn visit_newtype<T>(&mut self) -> Result<T, Error>
-        where T: de::Deserialize,
+    where
+        T: de::Deserialize,
     {
         let val = self.val.take().expect("val is missing");
         de::Deserialize::deserialize(&mut Deserializer::new(val))
     }
 
-    fn visit_tuple<V>(
-        &mut self,
-        _len: usize,
-        visitor: V
-    ) -> Result<V::Value, Error>
-        where V: de::Visitor,
+    fn visit_tuple<V>(&mut self, _len: usize, visitor: V) -> Result<V::Value, Error>
+    where
+        V: de::Visitor,
     {
         let val = self.val.take().expect("val is missing");
         if let Value::Array(fields) = val {
-            de::Deserializer::deserialize(&mut SeqDeserializer {
-                                              de: self.de,
-                                              len: fields.len(),
-                                              iter: fields.into_iter(),
-                                          },
-                                          visitor)
+            de::Deserializer::deserialize(
+                &mut SeqDeserializer {
+                    de: self.de,
+                    len: fields.len(),
+                    iter: fields.into_iter(),
+                },
+                visitor,
+            )
         } else {
             Err(de::Error::invalid_type(de::Type::Tuple))
         }
@@ -1119,19 +1084,22 @@ impl<'a> de::VariantVisitor for VariantDeserializer<'a> {
     fn visit_struct<V>(
         &mut self,
         _fields: &'static [&'static str],
-        visitor: V
+        visitor: V,
     ) -> Result<V::Value, Error>
-        where V: de::Visitor,
+    where
+        V: de::Visitor,
     {
         let val = self.val.take().expect("val is missing");
         if let Value::Object(fields) = val {
-            de::Deserializer::deserialize(&mut MapDeserializer {
-                                              de: self.de,
-                                              len: fields.len(),
-                                              iter: fields.into_iter(),
-                                              value: None,
-                                          },
-                                          visitor)
+            de::Deserializer::deserialize(
+                &mut MapDeserializer {
+                    de: self.de,
+                    len: fields.len(),
+                    iter: fields.into_iter(),
+                    value: None,
+                },
+                visitor,
+            )
         } else {
             Err(de::Error::invalid_type(de::Type::Struct))
         }
@@ -1149,7 +1117,8 @@ impl<'a> de::Deserializer for SeqDeserializer<'a> {
 
     #[inline]
     fn deserialize<V>(&mut self, mut visitor: V) -> Result<V::Value, Error>
-        where V: de::Visitor,
+    where
+        V: de::Visitor,
     {
         if self.len == 0 {
             visitor.visit_unit()
@@ -1158,7 +1127,7 @@ impl<'a> de::Deserializer for SeqDeserializer<'a> {
         }
     }
 
-    forward_to_deserialize!{
+    forward_to_deserialize! {
         deserialize_bool();
         deserialize_usize();
         deserialize_u8();
@@ -1196,7 +1165,8 @@ impl<'a> de::SeqVisitor for SeqDeserializer<'a> {
     type Error = Error;
 
     fn visit<T>(&mut self) -> Result<Option<T>, Error>
-        where T: de::Deserialize,
+    where
+        T: de::Deserialize,
     {
         match self.iter.next() {
             Some(value) => {
@@ -1232,7 +1202,8 @@ impl<'a> de::MapVisitor for MapDeserializer<'a> {
     type Error = Error;
 
     fn visit_key<T>(&mut self) -> Result<Option<T>, Error>
-        where T: de::Deserialize,
+    where
+        T: de::Deserialize,
     {
         match self.iter.next() {
             Some((key, value)) => {
@@ -1246,7 +1217,8 @@ impl<'a> de::MapVisitor for MapDeserializer<'a> {
     }
 
     fn visit_value<T>(&mut self) -> Result<T, Error>
-        where T: de::Deserialize,
+    where
+        T: de::Deserialize,
     {
         let value = self.value.take().expect("value is missing");
         self.de.value = Some(value);
@@ -1262,33 +1234,30 @@ impl<'a> de::MapVisitor for MapDeserializer<'a> {
     }
 
     fn missing_field<V>(&mut self, field: &'static str) -> Result<V, Error>
-        where V: de::Deserialize,
+    where
+        V: de::Deserialize,
     {
         struct MissingFieldDeserializer(&'static str);
 
         impl de::Deserializer for MissingFieldDeserializer {
             type Error = de::value::Error;
 
-            fn deserialize<V>(
-                &mut self,
-                _visitor: V
-            ) -> Result<V::Value, Self::Error>
-                where V: de::Visitor,
+            fn deserialize<V>(&mut self, _visitor: V) -> Result<V::Value, Self::Error>
+            where
+                V: de::Visitor,
             {
                 let &mut MissingFieldDeserializer(field) = self;
                 Err(de::value::Error::MissingField(field))
             }
 
-            fn deserialize_option<V>(
-                &mut self,
-                mut visitor: V
-            ) -> Result<V::Value, Self::Error>
-                where V: de::Visitor,
+            fn deserialize_option<V>(&mut self, mut visitor: V) -> Result<V::Value, Self::Error>
+            where
+                V: de::Visitor,
             {
                 visitor.visit_none()
             }
 
-            forward_to_deserialize!{
+            forward_to_deserialize! {
                 deserialize_bool();
                 deserialize_usize();
                 deserialize_u8();
@@ -1335,12 +1304,13 @@ impl<'a> de::Deserializer for MapDeserializer<'a> {
 
     #[inline]
     fn deserialize<V>(&mut self, mut visitor: V) -> Result<V::Value, Error>
-        where V: de::Visitor,
+    where
+        V: de::Visitor,
     {
         visitor.visit_map(self)
     }
 
-    forward_to_deserialize!{
+    forward_to_deserialize! {
         deserialize_bool();
         deserialize_usize();
         deserialize_u8();
@@ -1382,7 +1352,8 @@ impl<'a> de::Deserializer for MapDeserializer<'a> {
 /// assert_eq!(val.as_str(), Some("foo"))
 /// ```
 pub fn to_value<T: ?Sized>(value: &T) -> Value
-    where T: ser::Serialize,
+where
+    T: ser::Serialize,
 {
     let mut ser = Serializer::new();
     value.serialize(&mut ser).expect("failed to serialize");
@@ -1391,7 +1362,8 @@ pub fn to_value<T: ?Sized>(value: &T) -> Value
 
 /// Shortcut function to decode a Hjson `Value` into a `T`
 pub fn from_value<T>(value: Value) -> Result<T, Error>
-    where T: de::Deserialize,
+where
+    T: de::Deserialize,
 {
     let mut de = Deserializer::new(value);
     de::Deserialize::deserialize(&mut de)
@@ -1404,7 +1376,8 @@ pub trait ToJson {
 }
 
 impl<T: ?Sized> ToJson for T
-    where T: ser::Serialize,
+where
+    T: ser::Serialize,
 {
     fn to_json(&self) -> Value {
         to_value(&self)
