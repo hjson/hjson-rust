@@ -11,7 +11,7 @@ keywords = ["hjson", "json", "serde", "serialization"]
 docopt = "1.1"
 serde = "1.0"
 serde_json = "1.0"
-serde-hjson = { version = "0.9", path = "../hjson" }
+serde-hjson = { version = "0.10", path = "../hjson" }
 
 [[bin]]
 name = "hjson"
