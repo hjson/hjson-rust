@@ -55,7 +55,8 @@ impl ArrayBuilder {
 
     /// Insert a value into the array.
     pub fn push<T: ser::Serialize>(mut self, v: T) -> ArrayBuilder {
-        self.array.push(value::to_value(&v));
+        self.array
+            .push(value::to_value(&v).expect("failed to serialize"));
         self
     }
 
@@ -104,7 +105,10 @@ impl ObjectBuilder {
         S: Into<String>,
         V: ser::Serialize,
     {
-        self.object.insert(key.into(), value::to_value(&value));
+        self.object.insert(
+            key.into(),
+            value::to_value(&value).expect("failed to serialize"),
+        );
         self
     }
 

@@ -22,11 +22,6 @@
 //! ## Parsing a `str` to `Value` and reading the result
 //!
 //! ```rust
-//! //#![feature(custom_derive, plugin)]
-//! //#![plugin(serde_macros)]
-//!
-//! extern crate serde_hjson;
-//!
 //! use serde_hjson::Value;
 //!
 //! fn main() {
@@ -54,7 +49,6 @@
 //! }
 //! ```
 
-#![cfg_attr(feature = "nightly-testing", plugin(clippy))]
 #![deny(missing_docs)]
 
 #[macro_use]
@@ -73,9 +67,6 @@ pub use self::de::{
 pub use self::error::{Error, ErrorCode, Result};
 pub use self::ser::{to_string, to_vec, to_writer, Serializer};
 pub use self::value::{from_value, to_value, Map, Value};
-
-#[macro_use]
-mod forward;
 
 pub mod builder;
 pub mod de;
