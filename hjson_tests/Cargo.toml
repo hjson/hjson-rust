@@ -6,13 +6,10 @@ build = "build.rs"
 edition = "2018"
 
 [build-dependencies]
-syntex = { version = "*", optional = true }
-serde_codegen = { version = "*", optional = true }
-quasi_codegen = { version = "*", optional = true }
-skeptic = "^0.4.0"
+skeptic = "0.13"
 
 [dependencies]
-regex = "0.1"
+regex = "1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde-hjson = { version = "*", path = "../hjson" }

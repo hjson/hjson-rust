@@ -4,6 +4,7 @@ extern crate serde_json;
 
 use regex::Regex;
 use serde_hjson::Value;
+use std::borrow::Cow;
 use std::fs;
 use std::io;
 use std::path::Path;
@@ -37,7 +38,8 @@ macro_rules! run_test {
             let udata = data.unwrap();
             let (rjson, rhjson) = get_result_content(name).unwrap();
             let actual_hjson = serde_hjson::to_string(&udata).unwrap();
-            let actual_json = $fix(serde_json::to_string_pretty(&udata).unwrap());
+            let actual_json = serde_json::to_string_pretty(&udata).unwrap();
+            let actual_json = $fix(&actual_json);
             if rhjson != actual_hjson {
                 println!(
                     "{:?}\n---hjson expected\n{}\n---hjson actual\n{}\n---\n",
@@ -57,17 +59,17 @@ macro_rules! run_test {
 
 // add fixes where rust's json differs from javascript
 
-fn std_fix(json: String) -> String {
+fn std_fix(json: &str) -> Cow<str> {
     // serde_json serializes integers with a superfluous .0 suffix
     let re = Regex::new(r"(?m)(?P<d>\d)\.0(?P<s>,?)$").unwrap();
     re.replace_all(&json, "$d$s")
 }
 
-fn fix_kan(json: String) -> String {
+fn fix_kan(json: &str) -> String {
     std_fix(json).replace("    -0,", "    0,")
 }
 
-fn fix_pass1(json: String) -> String {
+fn fix_pass1(json: &str) -> String {
     std_fix(json)
         .replace("1.23456789e34", "1.23456789e+34")
         .replace("2.3456789012e76", "2.3456789012e+76")

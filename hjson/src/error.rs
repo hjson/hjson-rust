@@ -116,10 +116,11 @@ pub enum Error {
 }
 
 impl error::Error for Error {
+    #[allow(deprecated)]
     fn description(&self) -> &str {
         match *self {
             Error::Syntax(..) => "syntax error",
-            Error::Io(ref error) => error::Error::description(error),
+            Error::Io(ref error) => error.description(),
             Error::FromUtf8(ref error) => error.description(),
         }
     }

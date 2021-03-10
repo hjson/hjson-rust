@@ -229,11 +229,9 @@ where
 
             let is_eol = ch == b'\r' || ch == b'\n' || ch == b'\x00';
             let is_comment = ch == b'#'
-                || if ch == b'/' {
+                || ch == b'/' && {
                     let next = self.rdr.peek_or_null()?;
                     next == b'/' || next == b'*'
-                } else {
-                    false
                 };
             if is_eol || is_comment || ch == b',' || ch == b'}' || ch == b']' {
                 let chf = self.str_buf[0];
