@@ -35,7 +35,7 @@
 
 use serde::ser;
 
-use value::{self, Value, Map};
+use value::{self, Map, Value};
 
 /// This structure provides a simple interface for constructing a JSON array.
 pub struct ArrayBuilder {
@@ -55,14 +55,16 @@ impl ArrayBuilder {
 
     /// Insert a value into the array.
     pub fn push<T: ser::Serialize>(mut self, v: T) -> ArrayBuilder {
-        self.array.push(value::to_value(&v));
+        self.array
+            .push(value::to_value(&v).expect("failed to serialize"));
         self
     }
 
     /// Creates and passes an `ArrayBuilder` into a closure, then inserts the resulting array into
     /// this array.
-    pub fn push_array<F>(mut self, f: F) -> ArrayBuilder where
-        F: FnOnce(ArrayBuilder) -> ArrayBuilder
+    pub fn push_array<F>(mut self, f: F) -> ArrayBuilder
+    where
+        F: FnOnce(ArrayBuilder) -> ArrayBuilder,
     {
         let builder = ArrayBuilder::new();
         self.array.push(f(builder).unwrap());
@@ -71,8 +73,9 @@ impl ArrayBuilder {
 
     /// Creates and passes an `ArrayBuilder` into a closure, then inserts the resulting object into
     /// this array.
-    pub fn push_object<F>(mut self, f: F) -> ArrayBuilder where
-        F: FnOnce(ObjectBuilder) -> ObjectBuilder
+    pub fn push_object<F>(mut self, f: F) -> ArrayBuilder
+    where
+        F: FnOnce(ObjectBuilder) -> ObjectBuilder,
     {
         let builder = ObjectBuilder::new();
         self.array.push(f(builder).unwrap());
@@ -98,18 +101,23 @@ impl ObjectBuilder {
 
     /// Insert a key-value pair into the object.
     pub fn insert<S, V>(mut self, key: S, value: V) -> ObjectBuilder
-        where S: Into<String>,
-              V: ser::Serialize,
+    where
+        S: Into<String>,
+        V: ser::Serialize,
     {
-        self.object.insert(key.into(), value::to_value(&value));
+        self.object.insert(
+            key.into(),
+            value::to_value(&value).expect("failed to serialize"),
+        );
         self
     }
 
     /// Creates and passes an `ObjectBuilder` into a closure, then inserts the resulting array into
     /// this object.
     pub fn insert_array<S, F>(mut self, key: S, f: F) -> ObjectBuilder
-        where S: Into<String>,
-              F: FnOnce(ArrayBuilder) -> ArrayBuilder
+    where
+        S: Into<String>,
+        F: FnOnce(ArrayBuilder) -> ArrayBuilder,
     {
         let builder = ArrayBuilder::new();
         self.object.insert(key.into(), f(builder).unwrap());
@@ -119,8 +127,9 @@ impl ObjectBuilder {
     /// Creates and passes an `ObjectBuilder` into a closure, then inserts the resulting object into
     /// this object.
     pub fn insert_object<S, F>(mut self, key: S, f: F) -> ObjectBuilder
-        where S: Into<String>,
-              F: FnOnce(ObjectBuilder) -> ObjectBuilder
+    where
+        S: Into<String>,
+        F: FnOnce(ObjectBuilder) -> ObjectBuilder,
     {
         let builder = ObjectBuilder::new();
         self.object.insert(key.into(), f(builder).unwrap());

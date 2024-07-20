@@ -1,33 +1,26 @@
-
 extern crate serde;
 extern crate serde_hjson;
 extern crate serde_json;
 
-use std::fs::File;
+use regex::Regex;
+use serde_hjson::Value;
+use std::borrow::Cow;
 use std::fs;
-use std::io::prelude::*;
 use std::io;
 use std::path::Path;
-use serde_hjson::Value;
-use regex::Regex;
-
-fn get_content(name: &str) -> io::Result<String> {
-    let mut f = try!(File::open(&Path::new(name)));
-    let mut buffer = String::new();
-    try!(f.read_to_string(&mut buffer));
-    Ok(buffer)
-}
 
 fn get_test_content(name: &str) -> io::Result<String> {
     let mut p = format!("./assets/{}_test.hjson", name);
-    if !Path::new(&p).exists() { p = format!("./assets/{}_test.json", name); }
-    get_content(&p)
+    if !Path::new(&p).exists() {
+        p = format!("./assets/{}_test.json", name);
+    }
+    fs::read_to_string(&p)
 }
 
-fn get_result_content(name: &str) -> io::Result<(String,String)> {
+fn get_result_content(name: &str) -> io::Result<(String, String)> {
     let p1 = format!("./assets/{}_result.json", name);
     let p2 = format!("./assets/{}_result.hjson", name);
-    Ok(( try!(get_content(&p1)), try!(get_content(&p2))))
+    Ok((fs::read_to_string(&p1)?, fs::read_to_string(&p2)?))
 }
 
 macro_rules! run_test {
@@ -38,45 +31,53 @@ macro_rules! run_test {
         println!("- running {}", name);
         let should_fail = name.starts_with("fail");
         let test_content = get_test_content(name).unwrap();
-        let data : serde_hjson::Result<Value> = serde_hjson::from_str(&test_content);
+        let data: serde_hjson::Result<Value> = serde_hjson::from_str(&test_content);
         assert!(should_fail == data.is_err());
 
         if !should_fail {
             let udata = data.unwrap();
-            let ( rjson, rhjson) = get_result_content(name).unwrap();
+            let (rjson, rhjson) = get_result_content(name).unwrap();
             let actual_hjson = serde_hjson::to_string(&udata).unwrap();
-            let actual_json = $fix(serde_json::to_string_pretty(&udata).unwrap());
+            let actual_json = serde_json::to_string_pretty(&udata).unwrap();
+            let actual_json = $fix(&actual_json);
             if rhjson != actual_hjson {
-                println!("{:?}\n---hjson expected\n{}\n---hjson actual\n{}\n---\n", name, rhjson, actual_hjson);
+                println!(
+                    "{:?}\n---hjson expected\n{}\n---hjson actual\n{}\n---\n",
+                    name, rhjson, actual_hjson
+                );
             }
             if rjson != actual_json {
-                println!("{:?}\n---json expected\n{}\n---json actual\n{}\n---\n", name, rjson, actual_json);
+                println!(
+                    "{:?}\n---json expected\n{}\n---json actual\n{}\n---\n",
+                    name, rjson, actual_json
+                );
             }
             assert!(rhjson == actual_hjson && rjson == actual_json);
         }
-    }}
+    }};
 }
 
 // add fixes where rust's json differs from javascript
 
-fn std_fix(json: String) -> String {
+fn std_fix(json: &str) -> Cow<str> {
     // serde_json serializes integers with a superfluous .0 suffix
     let re = Regex::new(r"(?m)(?P<d>\d)\.0(?P<s>,?)$").unwrap();
     re.replace_all(&json, "$d$s")
 }
 
-fn fix_kan(json: String) -> String { std_fix(json).replace("    -0,", "    0,") }
+fn fix_kan(json: &str) -> String {
+    std_fix(json).replace("    -0,", "    0,")
+}
 
-fn fix_pass1(json: String) -> String {
+fn fix_pass1(json: &str) -> String {
     std_fix(json)
-    .replace("1.23456789e34", "1.23456789e+34")
-    .replace("2.3456789012e76", "2.3456789012e+76")
+        .replace("1.23456789e34", "1.23456789e+34")
+        .replace("2.3456789012e76", "2.3456789012e+76")
 }
 
 #[test]
 fn test_hjson() {
-
-    let mut done : Vec<String> = Vec::new();
+    let mut done: Vec<String> = Vec::new();
 
     println!("");
     run_test!(charset, done, std_fix);
@@ -158,13 +159,15 @@ fn test_hjson() {
     // check if we include all assets
     let paths = fs::read_dir("./assets/").unwrap();
 
-    let all = paths.map(|item| {
-        String::from(item.unwrap().path().file_stem().unwrap().to_str().unwrap())
-    })
-    .filter(|x| x.contains("_test"))
-    .collect::<Vec<String>>();
+    let all = paths
+        .map(|item| String::from(item.unwrap().path().file_stem().unwrap().to_str().unwrap()))
+        .filter(|x| x.contains("_test"))
+        .collect::<Vec<String>>();
 
-    let missing = all.into_iter().filter(|x| done.iter().find(|y| &x == y) == None).collect::<Vec<String>>();
+    let missing = all
+        .into_iter()
+        .filter(|x| done.iter().find(|y| &x == y) == None)
+        .collect::<Vec<String>>();
 
     if missing.len() > 0 {
         for item in missing {

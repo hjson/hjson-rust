@@ -23,7 +23,7 @@ script:
 - |
     (cd hjson && travis-cargo build) &&
     (cd hjson && travis-cargo --only nightly test) &&
-    (cd hjson_tests && travis-cargo --skip nightly test -- --features with-syntex --no-default-features) &&
+    (cd hjson_tests && travis-cargo --skip nightly test -- --no-default-features) &&
     (cd hjson_tests && travis-cargo --only nightly test) &&
     (cd hjson && travis-cargo --only stable doc)
 

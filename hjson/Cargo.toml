@@ -1,6 +1,6 @@
 [package]
 name = "serde-hjson"
-version = "0.9.1"
+version = "0.10.0"
 authors = ["Christian Zangl <laktak@cdak.net>"]
 license = "MIT"
 description = "Hjson serialization file format"
@@ -10,14 +10,12 @@ readme = "../README.md"
 keywords = ["hjson", "json", "serde", "serialization"]
 
 [features]
-unstable-testing = ["clippy"]
 preserve_order = ["linked-hash-map", "linked-hash-map/serde_impl"]
 default = ["preserve_order"]
 
 [dependencies]
-serde = "^0.8.0"
-num-traits = "~0.1.32"
-regex = "^1.0"
+serde = "1.0"
+num-traits = "0.2"
+regex = "1.0"
 lazy_static = "1"
-clippy = { version = "^0.*", optional = true }
-linked-hash-map = { version = "^0.3.0", optional = true }
+linked-hash-map = { version = "0.5", optional = true }

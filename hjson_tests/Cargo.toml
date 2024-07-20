@@ -3,27 +3,17 @@ name = "serde-hjson-tests"
 version = "0.8.2"
 authors = ["Christian Zangl <laktak@cdak.net>"]
 build = "build.rs"
-
-[features]
-default = ["serde_macros"]
-with-syntex = ["syntex", "serde_codegen", "quasi_codegen"]
-nightly-testing = ["clippy", "serde-hjson/clippy"]
+edition = "2018"
 
 [build-dependencies]
-syntex = { version = "*", optional = true }
-serde_codegen = { version = "*", optional = true }
-quasi_codegen = { version = "*", optional = true }
-skeptic = "^0.4.0"
+skeptic = "0.13"
 
 [dependencies]
-regex = "0.1"
-clippy = { version = "^0.*", optional = true }
-rustc-serialize = "^0.3.0"
-serde = "^0.8.0"
-serde_json = "^0.8.0"
-serde_macros = { version = "^0.8.0", optional = true }
+regex = "1"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 serde-hjson = { version = "*", path = "../hjson" }
-skeptic = "^0.4.0"
+skeptic = "0.13"
 
 [[test]]
 name = "test"

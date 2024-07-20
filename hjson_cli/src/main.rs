@@ -1,17 +1,16 @@
-
 extern crate core;
 extern crate docopt;
 extern crate serde;
 extern crate serde_hjson;
 extern crate serde_json;
 
-use serde_hjson::Value;
 use docopt::Docopt;
+use serde_hjson::Value;
 
-use std::path::Path;
 use std::fs::File;
-use std::io::prelude::*;
 use std::io;
+use std::io::prelude::*;
+use std::path::Path;
 
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 const USAGE: &'static str = "
@@ -31,11 +30,9 @@ Options:
 ";
 
 fn main() {
-
-
     let args = Docopt::new(USAGE)
-                      .and_then(|dopt| dopt.parse())
-                      .unwrap_or_else(|e| e.exit());
+        .and_then(|dopt| dopt.parse())
+        .unwrap_or_else(|e| e.exit());
 
     if args.get_bool("--version") {
         println!("Hjson CLI {}", VERSION);
@@ -52,7 +49,7 @@ fn main() {
         io::stdin().read_to_string(&mut buffer).unwrap();
     }
 
-    let data : Value = serde_hjson::from_str(&buffer).unwrap();
+    let data: Value = serde_hjson::from_str(&buffer).unwrap();
 
     if args.get_bool("-j") {
         println!("{}", serde_json::to_string_pretty(&data).unwrap());
