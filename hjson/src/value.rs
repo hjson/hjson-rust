@@ -1153,7 +1153,7 @@ impl<'de, 'a> de::MapAccess<'de> for MapDeserializer {
 /// ```rust
 /// use serde_hjson::to_value;
 /// let val = to_value("foo");
-/// assert_eq!(val.as_str(), Some("foo"))
+/// assert_eq!(val.unwrap().as_str(), Some("foo"))
 /// ```
 pub fn to_value<T: ?Sized>(value: &T) -> Result<Value>
 where
