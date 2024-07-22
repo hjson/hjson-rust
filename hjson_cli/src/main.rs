@@ -11,6 +11,8 @@ use std::fs::File;
 use std::io;
 use std::io::prelude::*;
 
+const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+
 #[derive(clap::Parser, Clone, Debug)]
 #[group(required = false, multiple = false)]
 /// Hjson, the Human JSON.
@@ -25,14 +27,21 @@ pub struct HJson {
     as_json: bool,
 
     /// If specified, read from this file, otherwise read from stdin
-    input: Option<std::path::PathBuf>
+    input: Option<std::path::PathBuf>,
+
+    /// Show version
+    #[arg(long, short='V', action)]
+    version: bool
 
 }
 
 fn main() {
 
     let args = HJson::parse();
-
+    if args.version {
+        println!("Hjson CLI {}", VERSION);
+        return;
+    }
     let mut buffer = String::new();
 
     if let Some(input) = args.input {
