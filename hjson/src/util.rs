@@ -71,7 +71,11 @@ where
     }
 
     pub fn eat_char(&mut self) -> u8 {
-        self.ch.remove(0)
+        if !self.ch.is_empty() {
+            self.ch.remove(0)
+        // Fallback mechanism for consuming a character.
+        // Sets ch to NULL termination
+        } else  { 0 }
     }
 
     pub fn uneat_char(&mut self, ch: u8) {
@@ -207,12 +211,21 @@ impl<Iter: Iterator<Item = u8>> ParseNumber<Iter> {
                         }
 
                         if is_float {
-                            Ok(Number::F64(res.parse::<f64>().unwrap()))
+                            Ok(Number::F64(res.parse::<f64>().map_err(|_| {
+                                let pos = self.rdr.pos();
+                                Error::Syntax(ErrorCode::InvalidNumber, pos.0, pos.1)
+                            })?))
                         } else {
                             if res.starts_with("-") {
-                                Ok(Number::I64(res.parse::<i64>().unwrap()))
+                                Ok(Number::I64(res.parse::<i64>().map_err(|_| {
+                                    let pos = self.rdr.pos();
+                                    Error::Syntax(ErrorCode::InvalidNumber, pos.0, pos.1)
+                                })?))
                             } else {
-                                Ok(Number::U64(res.parse::<u64>().unwrap()))
+                                Ok(Number::U64(res.parse::<u64>().map_err(|_| {
+                                    let pos = self.rdr.pos();
+                                    Error::Syntax(ErrorCode::InvalidNumber, pos.0, pos.1)
+                                })?))
                             }
                         }
                     }

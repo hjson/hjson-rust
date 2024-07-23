@@ -276,8 +276,20 @@ where
                     }
                 }
                 if is_eol {
+                    let pos = self.rdr.pos();
                     // remove any whitespace at the end (ignored in quoteless strings)
-                    return visitor.visit_str(str::from_utf8(&self.str_buf).unwrap().trim());
+                    return visitor.visit_str(
+                        str::from_utf8(&self.str_buf)
+                            .map_err(|_| {
+                                let reader_error = super::Error::Syntax(
+                                    super::ErrorCode::EOFWhileParsingString,
+                                    pos.0,
+                                    pos.1,
+                                );
+                                reader_error
+                            })?
+                            .trim(),
+                    );
                 }
             }
             self.str_buf.push(ch);
@@ -345,7 +357,9 @@ where
 
         // we are at ''' +1 - get indent
         let (_, col) = self.rdr.pos();
-        let indent = col - 4;
+
+        // Fallback machanism if col is improper
+        let indent = if col >= 4 { col - 4 } else { 0 };
 
         // skip white/to (newline)
         while self.ml_skip_white()? {}
@@ -813,5 +827,10 @@ pub fn from_str<T>(s: &str) -> Result<T>
 where
     T: de::DeserializeOwned,
 {
-    from_slice(s.as_bytes())
+    if s.chars().last().is_some_and(|x| x.is_whitespace()) {
+        from_slice(s.as_bytes())
+    } else {
+        let s = format!("{s}\n");
+        from_slice(s.as_bytes())
+    }
 }

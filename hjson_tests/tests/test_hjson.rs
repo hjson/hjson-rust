@@ -3,11 +3,15 @@ extern crate serde_hjson;
 extern crate serde_json;
 
 use regex::Regex;
-use serde_hjson::Value;
 use std::borrow::Cow;
 use std::fs;
 use std::io;
 use std::path::Path;
+use serde_hjson::{Map, Value};
+use serde_hjson::error::Result;
+
+pub const TRIM_ENDLINE: bool = true;
+
 
 fn get_test_content(name: &str) -> io::Result<String> {
     let mut p = format!("./assets/{}_test.hjson", name);
@@ -24,19 +28,22 @@ fn get_result_content(name: &str) -> io::Result<(String, String)> {
 }
 
 macro_rules! run_test {
-    // {{ is a workaround for rust stable
     ($v: ident, $list: expr, $fix: expr) => {{
+        run_test!($v, $list, $fix, false);
+    }};
+    // {{ is a workaround for rust stable
+    ($v: ident, $list: expr, $fix: expr, $trim_endline: expr) => {{
         let name = stringify!($v);
         $list.push(format!("{}_test", name));
         println!("- running {}", name);
         let should_fail = name.starts_with("fail");
-        let test_content = get_test_content(name).unwrap();
+        let test_content = get_test_content(name).expect("Could not read test content");
         let data: serde_hjson::Result<Value> = serde_hjson::from_str(&test_content);
         assert!(should_fail == data.is_err());
 
         if !should_fail {
             let udata = data.unwrap();
-            let (rjson, rhjson) = get_result_content(name).unwrap();
+            let (rjson, rhjson) = get_result_content(name).expect("Could not read result content");
             let actual_hjson = serde_hjson::to_string(&udata).unwrap();
             let actual_json = serde_json::to_string_pretty(&udata).unwrap();
             let actual_json = $fix(&actual_json);
@@ -52,7 +59,10 @@ macro_rules! run_test {
                     name, rjson, actual_json
                 );
             }
-            assert!(rhjson == actual_hjson && rjson == actual_json);
+            if $trim_endline { assert!(rhjson.trim_end() == actual_hjson && rjson.trim_end() == actual_json); }
+            else {
+                assert!(rhjson == actual_hjson && rjson == actual_json); 
+            }
         }
     }};
 }
@@ -155,6 +165,7 @@ fn test_hjson() {
     run_test!(stringify1, done, std_fix);
     run_test!(strings, done, std_fix);
     run_test!(trail, done, std_fix);
+    run_test!(simplenumber, done, std_fix, TRIM_ENDLINE);
 
     // check if we include all assets
     let paths = fs::read_dir("./assets/").unwrap();
@@ -175,4 +186,42 @@ fn test_hjson() {
         }
         assert!(false);
     }
+}
+
+#[test]
+pub fn parse_int_error() {
+    let data: Vec<u8> = vec![47, 97, 47, 65, 58, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 0, 0, 0, 54, 35, 54, 54, 54, 54, 54, 54, 54, 44, 35, 58, 45, 85, 85, 85, 35, 116, 45, 35, 35, 58, 47];
+
+    let sample: Result<Map<String, Value>> = serde_hjson::from_slice(&data);
+    assert!(sample.is_err())
+}
+
+#[test]
+pub fn removal_index() {
+    let data: Vec<u8> = vec![47, 42, 44, 45];
+
+    let sample: Result<Map<String, Value>> = serde_hjson::from_slice(&data);
+    assert!(sample.is_err())
+}
+
+#[test]
+pub fn subtract_overflow() {
+    let data: Vec<u8> = vec![39, 39, 39];
+
+    let sample: Result<Map<String, Value>> = serde_hjson::from_slice(&data);
+    assert!(sample.is_err())
+}
+
+#[test]
+pub fn invalid_utf8() {
+    let data: Vec<u8> = vec![155];
+
+    let sample: Result<Map<String, Value>> = serde_hjson::from_slice(&data);
+    assert!(sample.is_err())
+}
+
+#[test]
+pub fn integer_type() {
+    let json: Value = serde_hjson::from_str("123").unwrap();
+    assert!(json.is_number())
 }
