@@ -1,0 +1,16 @@
+name: test
+on: [push, pull_request]
+jobs:
+  test:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        rust: [stable]
+    steps:
+      - uses: actions/checkout@v3
+      - run: cd hjson && cargo build
+      - run: cd hjson_tests && cargo test
+      - run: cd hjson && cargo doc
