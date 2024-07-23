@@ -45,4 +45,6 @@ styles
   str1: 00 # part of the string
   str2: 00.0 // part of the string
   str3: 02 /* part of the string */
+  /key: value
+  key2: /value2
 }
