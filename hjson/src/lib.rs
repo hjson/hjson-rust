@@ -1,7 +1,7 @@
 //! # What is Hjson?
 //!
 //! A configuration file format for humans. Relaxed syntax, fewer mistakes, more comments.
-//! See https://hjson.github.io
+//! See <https://hjson.github.io>
 //!
 //! Data types that can be encoded are JavaScript types (see the `serde_hjson:Value` enum for more
 //! details):

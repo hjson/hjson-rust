@@ -28,24 +28,20 @@ fn get_result_content(name: &str) -> io::Result<(String, String)> {
 }
 
 macro_rules! run_test {
-    ($v: ident, $list: expr, $fix: expr) => {{
-        run_test!($v, $list, $fix, false);
-    }};
-    // {{ is a workaround for rust stable
-    ($v: ident, $list: expr, $fix: expr, $trim_endline: expr) => {{
+    ($v: ident, $list: expr, $fix: expr, $is_success: expr) => {{
         let name = stringify!($v);
         $list.push(format!("{}_test", name));
         println!("- running {}", name);
         let should_fail = name.starts_with("fail");
         let test_content = get_test_content(name).expect("Could not read test content");
         let data: serde_hjson::Result<Value> = serde_hjson::from_str(&test_content);
-        assert!(should_fail == data.is_err());
+        $is_success &= (should_fail == data.is_err());
 
         if !should_fail {
             let udata = data.unwrap();
             let (rjson, rhjson) = get_result_content(name).expect("Could not read result content");
-            let actual_hjson = serde_hjson::to_string(&udata).unwrap();
-            let actual_json = serde_json::to_string_pretty(&udata).unwrap();
+            let actual_hjson = serde_hjson::to_string(&udata).unwrap() + "\n";
+            let actual_json = serde_json::to_string_pretty(&udata).unwrap() + "\n";
             let actual_json = $fix(&actual_json);
             if rhjson != actual_hjson {
                 println!(
@@ -59,10 +55,7 @@ macro_rules! run_test {
                     name, rjson, actual_json
                 );
             }
-            if $trim_endline { assert!(rhjson.trim_end() == actual_hjson && rjson.trim_end() == actual_json); }
-            else {
-                assert!(rhjson == actual_hjson && rjson == actual_json); 
-            }
+            $is_success &= (rhjson == actual_hjson && rjson == actual_json);
         }
     }};
 }
@@ -88,84 +81,87 @@ fn fix_pass1(json: &str) -> String {
 #[test]
 fn test_hjson() {
     let mut done: Vec<String> = Vec::new();
+    let mut is_success: bool = true;
 
     println!("");
-    run_test!(charset, done, std_fix);
-    run_test!(comments, done, std_fix);
-    run_test!(empty, done, std_fix);
-    run_test!(failCharset1, done, std_fix);
-    run_test!(failJSON02, done, std_fix);
-    run_test!(failJSON05, done, std_fix);
-    run_test!(failJSON06, done, std_fix);
-    run_test!(failJSON07, done, std_fix);
-    run_test!(failJSON08, done, std_fix);
-    run_test!(failJSON10, done, std_fix);
-    run_test!(failJSON11, done, std_fix);
-    run_test!(failJSON12, done, std_fix);
-    run_test!(failJSON13, done, std_fix);
-    run_test!(failJSON14, done, std_fix);
-    run_test!(failJSON15, done, std_fix);
-    run_test!(failJSON16, done, std_fix);
-    run_test!(failJSON17, done, std_fix);
-    run_test!(failJSON19, done, std_fix);
-    run_test!(failJSON20, done, std_fix);
-    run_test!(failJSON21, done, std_fix);
-    run_test!(failJSON22, done, std_fix);
-    run_test!(failJSON23, done, std_fix);
-    run_test!(failJSON24, done, std_fix);
-    run_test!(failJSON26, done, std_fix);
-    run_test!(failJSON28, done, std_fix);
-    run_test!(failJSON29, done, std_fix);
-    run_test!(failJSON30, done, std_fix);
-    run_test!(failJSON31, done, std_fix);
-    run_test!(failJSON32, done, std_fix);
-    run_test!(failJSON33, done, std_fix);
-    run_test!(failJSON34, done, std_fix);
-    run_test!(failKey1, done, std_fix);
-    run_test!(failKey2, done, std_fix);
-    run_test!(failKey3, done, std_fix);
-    run_test!(failKey4, done, std_fix);
-    run_test!(failMLStr1, done, std_fix);
-    run_test!(failObj1, done, std_fix);
-    run_test!(failObj2, done, std_fix);
-    run_test!(failObj3, done, std_fix);
-    run_test!(failStr1a, done, std_fix);
-    run_test!(failStr1b, done, std_fix);
-    run_test!(failStr1c, done, std_fix);
-    run_test!(failStr1d, done, std_fix);
-    run_test!(failStr2a, done, std_fix);
-    run_test!(failStr2b, done, std_fix);
-    run_test!(failStr2c, done, std_fix);
-    run_test!(failStr2d, done, std_fix);
-    run_test!(failStr3a, done, std_fix);
-    run_test!(failStr3b, done, std_fix);
-    run_test!(failStr3c, done, std_fix);
-    run_test!(failStr3d, done, std_fix);
-    run_test!(failStr4a, done, std_fix);
-    run_test!(failStr4b, done, std_fix);
-    run_test!(failStr4c, done, std_fix);
-    run_test!(failStr4d, done, std_fix);
-    run_test!(failStr5a, done, std_fix);
-    run_test!(failStr5b, done, std_fix);
-    run_test!(failStr5c, done, std_fix);
-    run_test!(failStr5d, done, std_fix);
-    run_test!(failStr6a, done, std_fix);
-    run_test!(failStr6b, done, std_fix);
-    run_test!(failStr6c, done, std_fix);
-    run_test!(failStr6d, done, std_fix);
-    run_test!(kan, done, fix_kan);
-    run_test!(keys, done, std_fix);
-    run_test!(oa, done, std_fix);
-    run_test!(pass1, done, fix_pass1);
-    run_test!(pass2, done, std_fix);
-    run_test!(pass3, done, std_fix);
-    run_test!(pass4, done, std_fix);
-    run_test!(passSingle, done, std_fix);
-    run_test!(root, done, std_fix);
-    run_test!(stringify1, done, std_fix);
-    run_test!(strings, done, std_fix);
-    run_test!(trail, done, std_fix);
-    run_test!(simplenumber, done, std_fix, TRIM_ENDLINE);
+    run_test!(charset, done, std_fix, is_success);
+    run_test!(comments, done, std_fix, is_success);
+    run_test!(empty, done, std_fix, is_success);
+    run_test!(failCharset1, done, std_fix, is_success);
+    run_test!(failJSON02, done, std_fix, is_success);
+    run_test!(failJSON05, done, std_fix, is_success);
+    run_test!(failJSON06, done, std_fix, is_success);
+    run_test!(failJSON07, done, std_fix, is_success);
+    run_test!(failJSON08, done, std_fix, is_success);
+    run_test!(failJSON10, done, std_fix, is_success);
+    run_test!(failJSON11, done, std_fix, is_success);
+    run_test!(failJSON12, done, std_fix, is_success);
+    run_test!(failJSON13, done, std_fix, is_success);
+    run_test!(failJSON14, done, std_fix, is_success);
+    run_test!(failJSON15, done, std_fix, is_success);
+    run_test!(failJSON16, done, std_fix, is_success);
+    run_test!(failJSON17, done, std_fix, is_success);
+    run_test!(failJSON19, done, std_fix, is_success);
+    run_test!(failJSON20, done, std_fix, is_success);
+    run_test!(failJSON21, done, std_fix, is_success);
+    run_test!(failJSON22, done, std_fix, is_success);
+    run_test!(failJSON23, done, std_fix, is_success);
+    run_test!(failJSON24, done, std_fix, is_success);
+    run_test!(failJSON26, done, std_fix, is_success);
+    run_test!(failJSON28, done, std_fix, is_success);
+    run_test!(failJSON29, done, std_fix, is_success);
+    run_test!(failJSON30, done, std_fix, is_success);
+    run_test!(failJSON31, done, std_fix, is_success);
+    run_test!(failJSON32, done, std_fix, is_success);
+    run_test!(failJSON33, done, std_fix, is_success);
+    run_test!(failJSON34, done, std_fix, is_success);
+    run_test!(failKey1, done, std_fix, is_success);
+    run_test!(failKey2, done, std_fix, is_success);
+    run_test!(failKey3, done, std_fix, is_success);
+    run_test!(failKey4, done, std_fix, is_success);
+    run_test!(failMLStr1, done, std_fix, is_success);
+    run_test!(failObj1, done, std_fix, is_success);
+    run_test!(failObj2, done, std_fix, is_success);
+    run_test!(failObj3, done, std_fix, is_success);
+    run_test!(failStr1a, done, std_fix, is_success);
+    run_test!(failStr1b, done, std_fix, is_success);
+    run_test!(failStr1c, done, std_fix, is_success);
+    run_test!(failStr1d, done, std_fix, is_success);
+    run_test!(failStr2a, done, std_fix, is_success);
+    run_test!(failStr2b, done, std_fix, is_success);
+    run_test!(failStr2c, done, std_fix, is_success);
+    run_test!(failStr2d, done, std_fix, is_success);
+    run_test!(failStr3a, done, std_fix, is_success);
+    run_test!(failStr3b, done, std_fix, is_success);
+    run_test!(failStr3c, done, std_fix, is_success);
+    run_test!(failStr3d, done, std_fix, is_success);
+    run_test!(failStr4a, done, std_fix, is_success);
+    run_test!(failStr4b, done, std_fix, is_success);
+    run_test!(failStr4c, done, std_fix, is_success);
+    run_test!(failStr4d, done, std_fix, is_success);
+    run_test!(failStr5a, done, std_fix, is_success);
+    run_test!(failStr5b, done, std_fix, is_success);
+    run_test!(failStr5c, done, std_fix, is_success);
+    run_test!(failStr5d, done, std_fix, is_success);
+    run_test!(failStr6a, done, std_fix, is_success);
+    run_test!(failStr6b, done, std_fix, is_success);
+    run_test!(failStr6c, done, std_fix, is_success);
+    run_test!(failStr6d, done, std_fix, is_success);
+    run_test!(kan, done, fix_kan, is_success);
+    run_test!(keys, done, std_fix, is_success);
+    run_test!(oa, done, std_fix, is_success);
+    run_test!(pass1, done, fix_pass1, is_success);
+    run_test!(pass2, done, std_fix, is_success);
+    run_test!(pass3, done, std_fix, is_success);
+    run_test!(pass4, done, std_fix, is_success);
+    run_test!(passSingle, done, std_fix, is_success);
+    run_test!(root, done, std_fix, is_success);
+    run_test!(stringify1, done, std_fix, is_success);
+    run_test!(strings, done, std_fix, is_success);
+    run_test!(trail, done, std_fix, is_success);
+    run_test!(simplenumber, done, std_fix, is_success);
+
+    assert!(is_success);
 
     // check if we include all assets
     let paths = fs::read_dir("./assets/").unwrap();
