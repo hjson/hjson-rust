@@ -755,7 +755,7 @@ impl<'a> Formatter for HjsonFormatter<'a> {
     {
         self.current_indent -= 1;
         self.current_is_array = self.stack.pop().unwrap();
-        writer.write(b"\n")?;
+        writer.write_all(b"\n")?;
         indent(writer, self.current_indent, self.indent)?;
         writer.write_all(&[ch]).map_err(From::from)
     }
