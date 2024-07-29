@@ -75,7 +75,9 @@ where
             self.ch.remove(0)
         // Fallback mechanism for consuming a character.
         // Sets ch to NULL termination
-        } else  { 0 }
+        } else {
+            0
+        }
     }
 
     pub fn uneat_char(&mut self, ch: u8) {

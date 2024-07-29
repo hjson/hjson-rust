@@ -1,8 +1,8 @@
+extern crate clap;
 extern crate core;
 extern crate serde;
 extern crate serde_hjson;
 extern crate serde_json;
-extern crate clap;
 
 use clap::Parser;
 use serde_hjson::Value;
@@ -14,29 +14,26 @@ use std::io::prelude::*;
 const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
 #[derive(clap::Parser, Clone, Debug)]
-#[group(id="formatting", required = false, multiple = false)]
+#[group(id = "formatting", required = false, multiple = false)]
 /// Hjson, the Human JSON.
 pub struct HJson {
-
     /// Output as formatted json
-    #[arg(short='j', action, group="formatting")]
+    #[arg(short = 'j', action, group = "formatting")]
     as_formatted_json: bool,
 
     /// Output as json
-    #[arg(short='c', action, group="formatting")]
+    #[arg(short = 'c', action, group = "formatting")]
     as_json: bool,
 
     /// If specified, read from this file, otherwise read from stdin
     input: Option<std::path::PathBuf>,
 
     /// Show version
-    #[arg(long, short='V', action)]
-    version: bool
-
+    #[arg(long, short = 'V', action)]
+    version: bool,
 }
 
 fn main() {
-
     let args = HJson::parse();
     if args.version {
         println!("Hjson CLI {}", VERSION);
