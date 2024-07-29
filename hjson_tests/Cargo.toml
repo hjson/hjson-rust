@@ -12,4 +12,4 @@ serde-hjson = { version = "*", path = "../hjson" }
 
 [[test]]
 name = "test"
-path = "tests/test.rs"
+path = "tests/test_hjson.rs"

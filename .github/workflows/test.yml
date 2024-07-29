@@ -11,7 +11,8 @@ jobs:
         rust: [stable]
     steps:
       - uses: actions/checkout@v4
-      - run: cd hjson && cargo build
-      - run: cd hjson_cli && cargo build
-      - run: cd hjson_tests && cargo test
+      - run: rustup update ${{ matrix.rust }} && rustup default ${{ matrix.rust }}
+      - run: cd hjson && cargo build --release
+      - run: cd hjson_cli && cargo build --release
+      - run: cargo test -- --nocapture
       - run: cd hjson && cargo doc
