@@ -1,6 +1,6 @@
 [package]
 name = "hjson"
-version = "0.8.2"
+version = "1.0.0"
 authors = ["Christian Zangl <laktak@cdak.net>"]
 license = "MIT"
 description = "Hjson serialization file format"
@@ -9,9 +9,9 @@ keywords = ["hjson", "json", "serde", "serialization"]
 
 [dependencies]
 serde = "1.0"
-clap = { version = "4.5.9", features = ["derive"] }
+clap = { version = "4.5", features = ["derive"] }
 serde_json = "1.0"
-serde-hjson = { version = "0.10", path = "../hjson" }
+serde-hjson = { version = "1.0", path = "../hjson" }
 
 [[bin]]
 name = "hjson"
