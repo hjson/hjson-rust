@@ -3,15 +3,14 @@ extern crate serde_hjson;
 extern crate serde_json;
 
 use regex::Regex;
+use serde_hjson::error::Result;
+use serde_hjson::{Map, Value};
 use std::borrow::Cow;
 use std::fs;
 use std::io;
 use std::path::Path;
-use serde_hjson::{Map, Value};
-use serde_hjson::error::Result;
 
 pub const TRIM_ENDLINE: bool = true;
-
 
 fn get_test_content(name: &str) -> io::Result<String> {
     let mut p = format!("./assets/{}_test.hjson", name);
@@ -186,7 +185,11 @@ fn test_hjson() {
 
 #[test]
 pub fn parse_int_error() {
-    let data: Vec<u8> = vec![47, 97, 47, 65, 58, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 0, 0, 0, 54, 35, 54, 54, 54, 54, 54, 54, 54, 44, 35, 58, 45, 85, 85, 85, 35, 116, 45, 35, 35, 58, 47];
+    let data: Vec<u8> = vec![
+        47, 97, 47, 65, 58, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54, 54,
+        54, 54, 54, 54, 54, 0, 0, 0, 54, 35, 54, 54, 54, 54, 54, 54, 54, 44, 35, 58, 45, 85, 85,
+        85, 35, 116, 45, 35, 35, 58, 47,
+    ];
 
     let sample: Result<Map<String, Value>> = serde_hjson::from_slice(&data);
     assert!(sample.is_err())
