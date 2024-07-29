@@ -1,5 +1,7 @@
 # hjson-rust History
 
+- v1.0.0
+  - stable
 - v0.10.0
   - update to serde 1.0
 - v0.9.0
