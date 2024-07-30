@@ -827,7 +827,7 @@ pub fn from_str<T>(s: &str) -> Result<T>
 where
     T: de::DeserializeOwned,
 {
-    if s.chars().last().is_some_and(|x| x.is_whitespace()) {
+    if s.chars().last().map_or(false, |x| x.is_whitespace()) {
         from_slice(s.as_bytes())
     } else {
         let s = format!("{s}\n");

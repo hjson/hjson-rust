@@ -6,6 +6,7 @@ license = "MIT"
 description = "Hjson serialization file format"
 repository = "https://github.com/hjson/hjson-rust"
 keywords = ["hjson", "json", "serde", "serialization"]
+edition = "2021"
 
 [dependencies]
 serde = "1.0"

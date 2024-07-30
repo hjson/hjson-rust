@@ -1,17 +1,33 @@
 name: test
-on: [push, pull_request]
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+permissions:
+  contents: read
+
 jobs:
   test:
-    name: ${{ matrix.os }}
+    name: ${{ matrix.os }} / Rust ${{ matrix.rust }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
         rust: [stable]
+        include:
+          - os: ubuntu-latest
+            rust: 1.65.0 # MSRV
+          - os: ubuntu-latest
+            rust: beta
     steps:
       - uses: actions/checkout@v4
-      - run: rustup update ${{ matrix.rust }} && rustup default ${{ matrix.rust }}
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
       - run: cd hjson && cargo build --release
       - run: cd hjson_cli && cargo build --release
       - run: cargo test -- --nocapture

@@ -2,7 +2,7 @@
 name = "serde-hjson-tests"
 version = "1.0.0"
 authors = ["Christian Zangl <laktak@cdak.net>"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 regex = "1.10"
