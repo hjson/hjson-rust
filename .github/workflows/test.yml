@@ -29,6 +29,13 @@ jobs:
         with:
           toolchain: ${{ matrix.rust }}
       - run: cd hjson && cargo build --release
-      - run: cd hjson_cli && cargo build --release
-      - run: cargo test -- --nocapture
+      - if: matrix.rust != '1.65.0'
+        run: cd hjson_cli && cargo build --release
+      - run: |
+          if [ '${{ matrix.rust }}' == '1.65.0' ]; then
+            # because of 'clap_derive' it needs Rust 1.74+
+            cargo test --workspace --exclude hjson -- --nocapture
+          else
+            cargo test --workspace -- --nocapture
+          fi
       - run: cd hjson && cargo doc
