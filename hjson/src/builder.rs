@@ -35,7 +35,7 @@
 
 use serde::ser;
 
-use value::{self, Map, Value};
+use super::value::{self, Map, Value};
 
 /// This structure provides a simple interface for constructing a JSON array.
 pub struct ArrayBuilder {

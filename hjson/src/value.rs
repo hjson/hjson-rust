@@ -47,7 +47,7 @@ use num_traits::NumCast;
 
 use serde::{de, ser};
 
-use error::{Error, ErrorCode};
+use super::error::{Error, ErrorCode};
 
 type Result<T, E = Error> = std::result::Result<T, E>;
 
@@ -1188,7 +1188,7 @@ where
 #[cfg(test)]
 mod test {
     use super::Value;
-    use de::from_str;
+    use super::super::de::from_str;
 
     #[test]
     fn number_deserialize() {

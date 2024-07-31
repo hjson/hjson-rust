@@ -1,2 +1,3 @@
 [workspace]
 members = ["hjson", "hjson_cli", "hjson_tests"]
+resolver = "2"

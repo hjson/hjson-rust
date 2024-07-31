@@ -1,18 +1,41 @@
 name: test
-on: [push, pull_request]
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+permissions:
+  contents: read
+
 jobs:
   test:
-    name: ${{ matrix.os }}
+    name: ${{ matrix.os }} / Rust ${{ matrix.rust }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
         rust: [stable]
+        include:
+          - os: ubuntu-latest
+            rust: 1.65.0 # MSRV
+          - os: ubuntu-latest
+            rust: beta
     steps:
       - uses: actions/checkout@v4
-      - run: rustup update ${{ matrix.rust }} && rustup default ${{ matrix.rust }}
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: ${{ matrix.rust }}
       - run: cd hjson && cargo build --release
-      - run: cd hjson_cli && cargo build --release
-      - run: cargo test -- --nocapture
+      - if: matrix.rust != '1.65.0'
+        run: cd hjson_cli && cargo build --release
+      - run: |
+          if [ '${{ matrix.rust }}' == '1.65.0' ]; then
+            # because of 'clap_derive' it needs Rust 1.74+
+            cargo test --workspace --exclude hjson -- --nocapture
+          else
+            cargo test --workspace -- --nocapture
+          fi
       - run: cd hjson && cargo doc
