@@ -11,7 +11,7 @@ use std::fs::File;
 use std::io;
 use std::io::prelude::*;
 
-const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 #[derive(clap::Parser, Clone, Debug)]
 #[group(id = "formatting", required = false, multiple = false)]

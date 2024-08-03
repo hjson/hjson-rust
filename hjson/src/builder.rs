@@ -38,14 +38,15 @@ use serde::ser;
 use super::value::{self, Map, Value};
 
 /// This structure provides a simple interface for constructing a JSON array.
+#[derive(Default)]
 pub struct ArrayBuilder {
     array: Vec<Value>,
 }
 
 impl ArrayBuilder {
     /// Construct an `ObjectBuilder`.
-    pub fn new() -> ArrayBuilder {
-        ArrayBuilder { array: Vec::new() }
+    pub fn new() -> Self {
+        Self { array: Vec::new() }
     }
 
     /// Return the constructed `Value`.
@@ -84,14 +85,15 @@ impl ArrayBuilder {
 }
 
 /// This structure provides a simple interface for constructing a JSON object.
+#[derive(Default)]
 pub struct ObjectBuilder {
     object: Map<String, Value>,
 }
 
 impl ObjectBuilder {
     /// Construct an `ObjectBuilder`.
-    pub fn new() -> ObjectBuilder {
-        ObjectBuilder { object: Map::new() }
+    pub fn new() -> Self {
+        Self { object: Map::new() }
     }
 
     /// Return the constructed `Value`.

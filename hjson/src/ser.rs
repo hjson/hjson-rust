@@ -39,10 +39,7 @@ where
     /// specified.
     #[inline]
     pub fn with_formatter(writer: W, formatter: F) -> Self {
-        Serializer {
-            writer: writer,
-            formatter: formatter,
-        }
+        Self { writer, formatter }
     }
 
     /// Unwrap the `Writer` from the `Serializer`.
@@ -169,7 +166,7 @@ where
     fn serialize_bytes(self, value: &[u8]) -> Result<()> {
         let mut seq = self.serialize_seq(Some(value.len()))?;
         for byte in value {
-            ser::SerializeSeq::serialize_element(&mut seq, byte)?
+            ser::SerializeSeq::serialize_element(&mut seq, byte)?;
         }
         ser::SerializeSeq::end(seq)
     }
@@ -320,9 +317,9 @@ where
     type Ok = ();
     type Error = Error;
 
-    fn serialize_element<T: ?Sized>(&mut self, value: &T) -> Result<()>
+    fn serialize_element<T>(&mut self, value: &T) -> Result<()>
     where
-        T: serde::Serialize,
+        T: serde::Serialize + ?Sized,
     {
         self.ser
             .formatter
@@ -347,9 +344,9 @@ where
     type Ok = ();
     type Error = Error;
 
-    fn serialize_element<T: ?Sized>(&mut self, value: &T) -> Result<()>
+    fn serialize_element<T>(&mut self, value: &T) -> Result<()>
     where
-        T: serde::Serialize,
+        T: serde::Serialize + ?Sized,
     {
         ser::SerializeSeq::serialize_element(self, value)
     }
@@ -367,9 +364,9 @@ where
     type Ok = ();
     type Error = Error;
 
-    fn serialize_field<T: ?Sized>(&mut self, value: &T) -> Result<()>
+    fn serialize_field<T>(&mut self, value: &T) -> Result<()>
     where
-        T: serde::Serialize,
+        T: serde::Serialize + ?Sized,
     {
         ser::SerializeSeq::serialize_element(self, value)
     }
@@ -387,9 +384,9 @@ where
     type Ok = ();
     type Error = Error;
 
-    fn serialize_field<T: ?Sized>(&mut self, value: &T) -> Result<()>
+    fn serialize_field<T>(&mut self, value: &T) -> Result<()>
     where
-        T: serde::Serialize,
+        T: serde::Serialize + ?Sized,
     {
         ser::SerializeSeq::serialize_element(self, value)
     }
@@ -411,9 +408,9 @@ where
     type Ok = ();
     type Error = Error;
 
-    fn serialize_key<T: ?Sized>(&mut self, key: &T) -> Result<()>
+    fn serialize_key<T>(&mut self, key: &T) -> Result<()>
     where
-        T: serde::Serialize,
+        T: serde::Serialize + ?Sized,
     {
         self.ser
             .formatter
@@ -425,9 +422,9 @@ where
         self.ser.formatter.colon(&mut self.ser.writer)
     }
 
-    fn serialize_value<T: ?Sized>(&mut self, value: &T) -> Result<()>
+    fn serialize_value<T>(&mut self, value: &T) -> Result<()>
     where
-        T: serde::Serialize,
+        T: serde::Serialize + ?Sized,
     {
         value.serialize(&mut *self.ser)
     }
@@ -448,9 +445,9 @@ where
     type Ok = ();
     type Error = Error;
 
-    fn serialize_field<T: ?Sized>(&mut self, key: &'static str, value: &T) -> Result<()>
+    fn serialize_field<T>(&mut self, key: &'static str, value: &T) -> Result<()>
     where
-        T: serde::Serialize,
+        T: serde::Serialize + ?Sized,
     {
         ser::SerializeMap::serialize_entry(self, key, value)
     }
@@ -468,9 +465,9 @@ where
     type Ok = ();
     type Error = Error;
 
-    fn serialize_field<T: ?Sized>(&mut self, key: &'static str, value: &T) -> Result<()>
+    fn serialize_field<T>(&mut self, key: &'static str, value: &T) -> Result<()>
     where
-        T: serde::Serialize,
+        T: serde::Serialize + ?Sized,
     {
         ser::SerializeStruct::serialize_field(self, key, value)
     }
@@ -709,7 +706,7 @@ impl<'a> HjsonFormatter<'a> {
             current_is_array: false,
             stack: Vec::new(),
             at_colon: false,
-            indent: indent,
+            indent,
             braces_same_line: false,
         }
     }
@@ -776,7 +773,7 @@ impl<'a> Formatter for HjsonFormatter<'a> {
     {
         if self.at_colon {
             self.at_colon = false;
-            writer.write_all(b" ")?
+            writer.write_all(b" ")?;
         }
         Ok(())
     }
@@ -841,7 +838,7 @@ where
         static ref STARTS_WITH_KEYWORD: Regex = Regex::new(r#"^(true|false|null)\s*((,|\]|\}|#|//|/\*).*)?$"#).unwrap();
     }
 
-    if value.len() == 0 {
+    if value.is_empty() {
         formatter.start_value(wr)?;
         return escape_bytes(wr, value.as_bytes());
     }
@@ -850,10 +847,7 @@ where
     // see hjson syntax (must not parse as true, false, null or number)
 
     let mut pn = ParseNumber::new(value.bytes());
-    let is_number = match pn.parse(true) {
-        Ok(_) => true,
-        Err(_) => false,
-    };
+    let is_number = pn.parse(true).is_ok();
 
     if is_number || NEEDS_QUOTES.is_match(value) || STARTS_WITH_KEYWORD.is_match(value) {
         // First check if the string can be expressed in multiline format or
@@ -882,7 +876,7 @@ where
 {
     // wrap the string into the ''' (multiline) format
 
-    let a: Vec<&str> = value.split("\n").collect();
+    let a: Vec<&str> = value.split('\n').collect();
 
     if a.len() == 1 {
         // The string contains only a single line. We still use the multiline
@@ -891,12 +885,12 @@ where
         formatter.start_value(wr)?;
         wr.write_all(b"'''")?;
         wr.write_all(a[0].as_bytes())?;
-        wr.write_all(b"'''")?
+        wr.write_all(b"'''")?;
     } else {
         formatter.newline(wr, 1)?;
         wr.write_all(b"'''")?;
         for line in a {
-            formatter.newline(wr, if line.len() > 0 { 1 } else { -999 })?;
+            formatter.newline(wr, if line.is_empty() { -999 } else { 1 })?;
             wr.write_all(line.as_bytes())?;
         }
         formatter.newline(wr, 1)?;
@@ -980,12 +974,10 @@ where
     let f2 = format!("{:e}", value);
     if f1.len() <= f2.len() + 1 {
         f1
+    } else if !f2.contains("e-") {
+        f2.replace("e", "e+")
     } else {
-        if !f2.contains("e-") {
-            f2.replace("e", "e+")
-        } else {
-            f2
-        }
+        f2
     }
 }
 

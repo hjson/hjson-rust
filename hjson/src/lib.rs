@@ -50,6 +50,8 @@
 //! ```
 
 #![deny(missing_docs)]
+#![allow(clippy::match_like_matches_macro)]
+#![allow(clippy::needless_doctest_main)]
 
 #[macro_use]
 extern crate lazy_static;
