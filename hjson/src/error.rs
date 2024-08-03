@@ -129,7 +129,7 @@ impl error::Error for Error {
         match *self {
             Error::Io(ref error) => Some(error),
             Error::FromUtf8(ref error) => Some(error),
-            _ => None,
+            Error::Syntax(..) => None,
         }
     }
 }

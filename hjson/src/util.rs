@@ -17,7 +17,7 @@ where
     #[inline]
     pub fn new(iter: Iter) -> Self {
         StringReader {
-            iter: iter,
+            iter,
             line: 1,
             col: 0,
             ch: Vec::new(),
@@ -217,18 +217,16 @@ impl<Iter: Iterator<Item = u8>> ParseNumber<Iter> {
                                 let pos = self.rdr.pos();
                                 Error::Syntax(ErrorCode::InvalidNumber, pos.0, pos.1)
                             })?))
+                        } else if res.starts_with('-') {
+                            Ok(Number::I64(res.parse::<i64>().map_err(|_| {
+                                let pos = self.rdr.pos();
+                                Error::Syntax(ErrorCode::InvalidNumber, pos.0, pos.1)
+                            })?))
                         } else {
-                            if res.starts_with("-") {
-                                Ok(Number::I64(res.parse::<i64>().map_err(|_| {
-                                    let pos = self.rdr.pos();
-                                    Error::Syntax(ErrorCode::InvalidNumber, pos.0, pos.1)
-                                })?))
-                            } else {
-                                Ok(Number::U64(res.parse::<u64>().map_err(|_| {
-                                    let pos = self.rdr.pos();
-                                    Error::Syntax(ErrorCode::InvalidNumber, pos.0, pos.1)
-                                })?))
-                            }
+                            Ok(Number::U64(res.parse::<u64>().map_err(|_| {
+                                let pos = self.rdr.pos();
+                                Error::Syntax(ErrorCode::InvalidNumber, pos.0, pos.1)
+                            })?))
                         }
                     }
                     _ => Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0)),
@@ -249,11 +247,8 @@ impl<Iter: Iterator<Item = u8>> ParseNumber<Iter> {
             self.result.push(self.rdr.eat_char());
             has_value = true;
             // There can be only one leading '0'.
-            match self.rdr.peek_or_null()? {
-                b'0'..=b'9' => {
-                    return Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0));
-                }
-                _ => {}
+            if let b'0'..=b'9' = self.rdr.peek_or_null()? {
+                return Err(Error::Syntax(ErrorCode::InvalidNumber, 0, 0));
             }
         }
 
@@ -300,15 +295,8 @@ impl<Iter: Iterator<Item = u8>> ParseNumber<Iter> {
             }
         };
 
-        loop {
-            match self.rdr.peek_or_null()? {
-                b'0'..=b'9' => {
-                    self.result.push(self.rdr.eat_char());
-                }
-                _ => {
-                    break;
-                }
-            }
+        while let b'0'..=b'9' = self.rdr.peek_or_null()? {
+            self.result.push(self.rdr.eat_char());
         }
 
         match self.rdr.peek_or_null()? {
@@ -324,10 +312,7 @@ impl<Iter: Iterator<Item = u8>> ParseNumber<Iter> {
         self.result.push(b'e');
 
         match self.rdr.peek_or_null()? {
-            b'+' => {
-                self.result.push(self.rdr.eat_char());
-            }
-            b'-' => {
+            b'+' | b'-' => {
                 self.result.push(self.rdr.eat_char());
             }
             _ => {}
@@ -343,15 +328,8 @@ impl<Iter: Iterator<Item = u8>> ParseNumber<Iter> {
             }
         };
 
-        loop {
-            match self.rdr.peek_or_null()? {
-                b'0'..=b'9' => {
-                    self.result.push(self.rdr.eat_char());
-                }
-                _ => {
-                    break;
-                }
-            }
+        while let b'0'..=b'9' = self.rdr.peek_or_null()? {
+            self.result.push(self.rdr.eat_char());
         }
 
         Ok(())

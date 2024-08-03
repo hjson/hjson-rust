@@ -70,7 +70,7 @@ where
         }
     }
 
-    fn is_punctuator_char(&mut self, ch: u8) -> bool {
+    fn is_punctuator_char(ch: u8) -> bool {
         match ch {
             b'{' | b'}' | b'[' | b']' | b',' | b':' => true,
             _ => false,
@@ -92,7 +92,7 @@ where
             let ch = self.rdr.next_char_or_null()?;
 
             if ch == b':' {
-                if self.str_buf.len() == 0 {
+                if self.str_buf.is_empty() {
                     return Err(self.rdr.error(ErrorCode::Custom(
                         "Found ':' but no key name (for an empty key name use quotes)".to_string(),
                     )));
@@ -110,7 +110,7 @@ where
                 } else if space.is_none() {
                     space = Some(self.str_buf.len());
                 }
-            } else if self.is_punctuator_char(ch) {
+            } else if Self::is_punctuator_char(ch) {
                 return Err(self.rdr.error(ErrorCode::Custom("Found a punctuator where a key name was expected (check your syntax or use quotes if the key name includes {}[],: or whitespace)".to_string())));
             } else {
                 self.str_buf.push(ch);
@@ -137,7 +137,7 @@ where
                 self.state = State::Normal;
                 return self.visit_map(true, visitor);
             }
-            _ => {}
+            State::Normal => {}
         }
 
         match self.rdr.peek_or_null()? {
@@ -220,7 +220,7 @@ where
 
         let first = self.rdr.peek()?.unwrap();
 
-        if self.is_punctuator_char(first) {
+        if Self::is_punctuator_char(first) {
             return Err(self.rdr.error(ErrorCode::PunctuatorInQlString));
         }
 
@@ -255,8 +255,8 @@ where
                         }
                     }
                     _ => {
-                        if chf == b'-' || chf >= b'0' && chf <= b'9' {
-                            let mut pn = ParseNumber::new(self.str_buf.iter().map(|b| *b));
+                        if chf == b'-' || chf.is_ascii_digit() {
+                            let mut pn = ParseNumber::new(self.str_buf.iter().copied());
                             match pn.parse(false) {
                                 Ok(Number::F64(v)) => {
                                     self.rdr.uneat_char(ch);
@@ -281,12 +281,7 @@ where
                     return visitor.visit_str(
                         str::from_utf8(&self.str_buf)
                             .map_err(|_| {
-                                let reader_error = super::Error::Syntax(
-                                    super::ErrorCode::EOFWhileParsingString,
-                                    pos.0,
-                                    pos.1,
-                                );
-                                reader_error
+                                Error::Syntax(ErrorCode::EOFWhileParsingString, pos.0, pos.1)
                             })?
                             .trim(),
                     );
@@ -332,9 +327,9 @@ where
         match self.rdr.peek_or_null()? {
             b' ' | b'\t' | b'\r' => {
                 self.rdr.eat_char();
-                return Ok(true);
+                Ok(true)
             }
-            _ => return Ok(false),
+            _ => Ok(false),
         }
     }
 
@@ -407,11 +402,8 @@ where
         self.str_buf.clear();
 
         loop {
-            let ch = match self.rdr.next_char()? {
-                Some(ch) => ch,
-                None => {
-                    return Err(self.rdr.error(ErrorCode::EOFWhileParsingString));
-                }
+            let Some(ch) = self.rdr.next_char()? else {
+                return Err(self.rdr.error(ErrorCode::EOFWhileParsingString));
             };
 
             match ch {
@@ -419,11 +411,8 @@ where
                     return Ok(());
                 }
                 b'\\' => {
-                    let ch = match self.rdr.next_char()? {
-                        Some(ch) => ch,
-                        None => {
-                            return Err(self.rdr.error(ErrorCode::EOFWhileParsingString));
-                        }
+                    let Some(ch) = self.rdr.next_char()? else {
+                        return Err(self.rdr.error(ErrorCode::EOFWhileParsingString));
                     };
 
                     match ch {
@@ -457,7 +446,7 @@ where
 
                                     let n2 = self.decode_hex_escape()?;
 
-                                    if n2 < 0xDC00 || n2 > 0xDFFF {
+                                    if !(0xDC00..=0xDFFF).contains(&n2) {
                                         return Err(self
                                             .rdr
                                             .error(ErrorCode::LoneLeadingSurrogateInHexEscape));
@@ -466,7 +455,7 @@ where
                                     let n = (((n1 - 0xD800) as u32) << 10 | (n2 - 0xDC00) as u32)
                                         + 0x1_0000;
 
-                                    match char::from_u32(n as u32) {
+                                    match char::from_u32(n) {
                                         Some(c) => c,
                                         None => {
                                             return Err(self
@@ -522,10 +511,7 @@ where
     where
         V: de::Visitor<'de>,
     {
-        match self.state {
-            State::Root => {}
-            _ => {}
-        };
+        if let State::Root = self.state {}
         self.parse_value(visitor)
     }
 
@@ -569,7 +555,7 @@ struct SeqVisitor<'a, Iter: 'a + Iterator<Item = u8>> {
 
 impl<'a, Iter: Iterator<Item = u8>> SeqVisitor<'a, Iter> {
     fn new(de: &'a mut Deserializer<Iter>) -> Self {
-        SeqVisitor { de: de }
+        Self { de }
     }
 }
 
@@ -616,10 +602,10 @@ struct MapVisitor<'a, Iter: 'a + Iterator<Item = u8>> {
 
 impl<'a, Iter: Iterator<Item = u8>> MapVisitor<'a, Iter> {
     fn new(de: &'a mut Deserializer<Iter>, root: bool) -> Self {
-        MapVisitor {
-            de: de,
+        Self {
+            de,
             first: true,
-            root: root,
+            root,
         }
     }
 }
@@ -675,7 +661,7 @@ where
     {
         self.de.parse_object_colon()?;
 
-        Ok(seed.deserialize(&mut *self.de)?)
+        seed.deserialize(&mut *self.de)
     }
 }
 
@@ -774,22 +760,18 @@ where
     T: de::DeserializeOwned,
 {
     let fold: io::Result<Vec<_>> = iter.collect();
-    if fold.is_err() {
-        return Err(Error::Io(fold.unwrap_err()));
-    }
-
-    let bytes = fold.unwrap();
+    let bytes = fold.map_err(Error::Io)?;
 
     // deserialize tries first to decode with legacy support (new_for_root)
     // and then with the standard method if this fails.
     // todo: add compile switch
 
     // deserialize and make sure the whole stream has been consumed
-    let mut de = Deserializer::new_for_root(bytes.iter().map(|b| *b));
+    let mut de = Deserializer::new_for_root(bytes.iter().copied());
     de::Deserialize::deserialize(&mut de)
         .and_then(|x| de.end().map(|()| x))
         .or_else(|_| {
-            let mut de2 = Deserializer::new(bytes.iter().map(|b| *b));
+            let mut de2 = Deserializer::new(bytes.iter().copied());
             de::Deserialize::deserialize(&mut de2).and_then(|x| de2.end().map(|()| x))
         })
 
@@ -827,7 +809,7 @@ pub fn from_str<T>(s: &str) -> Result<T>
 where
     T: de::DeserializeOwned,
 {
-    if s.chars().last().map_or(false, |x| x.is_whitespace()) {
+    if s.chars().last().map_or(false, char::is_whitespace) {
         from_slice(s.as_bytes())
     } else {
         let s = format!("{s}\n");

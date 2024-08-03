@@ -150,7 +150,7 @@ impl Value {
             }
             s.parse().ok()
         }
-        if pointer == "" {
+        if pointer.is_empty() {
             return Some(self);
         }
         if !pointer.starts_with('/') {
@@ -181,7 +181,7 @@ impl Value {
             Value::Object(ref map) => match map.get(key) {
                 Some(json_value) => Some(json_value),
                 None => {
-                    for (_, v) in map.iter() {
+                    for v in map.values() {
                         match v.search(key) {
                             x if x.is_some() => return x,
                             _ => (),
@@ -226,7 +226,7 @@ impl Value {
     /// Returns None otherwise.
     pub fn as_array(&self) -> Option<&Vec<Value>> {
         match *self {
-            Value::Array(ref array) => Some(&*array),
+            Value::Array(ref array) => Some(array),
             _ => None,
         }
     }
@@ -459,7 +459,7 @@ impl<'de> de::Deserialize<'de> for Value {
                 };
 
                 while let Some(el) = seq.next_element()? {
-                    v.push(el)
+                    v.push(el);
                 }
 
                 Ok(Value::Array(v))
@@ -955,14 +955,11 @@ impl<'de> de::Deserializer<'de> for Value {
         let (variant, value) = match self {
             Value::Object(value) => {
                 let mut iter = value.into_iter();
-                let (variant, value) = match iter.next() {
-                    Some(v) => v,
-                    None => {
-                        return Err(de::Error::invalid_type(
-                            de::Unexpected::Map,
-                            &"map with a single key",
-                        ));
-                    }
+                let Some((variant, value)) = iter.next() else {
+                    return Err(de::Error::invalid_type(
+                        de::Unexpected::Map,
+                        &"map with a single key",
+                    ));
                 };
                 // enums are encoded in json as maps with a single key:value pair
                 if iter.next().is_some() {
@@ -1028,7 +1025,7 @@ struct VariantDeserializer {
     val: Option<Value>,
 }
 
-impl<'de, 'a> de::VariantAccess<'de> for VariantDeserializer {
+impl<'de> de::VariantAccess<'de> for VariantDeserializer {
     type Error = Error;
 
     fn unit_variant(self) -> Result<()> {
@@ -1116,7 +1113,7 @@ struct MapDeserializer {
     value: Option<Value>,
 }
 
-impl<'de, 'a> de::MapAccess<'de> for MapDeserializer {
+impl<'de> de::MapAccess<'de> for MapDeserializer {
     type Error = Error;
 
     fn next_key_seed<K>(&mut self, seed: K) -> Result<Option<K::Value>>
@@ -1137,7 +1134,7 @@ impl<'de, 'a> de::MapAccess<'de> for MapDeserializer {
         V: de::DeserializeSeed<'de>,
     {
         let value = self.value.take().expect("value is missing");
-        Ok(seed.deserialize(value)?)
+        seed.deserialize(value)
     }
 
     fn size_hint(&self) -> Option<usize> {
@@ -1155,9 +1152,9 @@ impl<'de, 'a> de::MapAccess<'de> for MapDeserializer {
 /// let val = to_value("foo");
 /// assert_eq!(val.unwrap().as_str(), Some("foo"))
 /// ```
-pub fn to_value<T: ?Sized>(value: &T) -> Result<Value>
+pub fn to_value<T>(value: &T) -> Result<Value>
 where
-    T: ser::Serialize,
+    T: ser::Serialize + ?Sized,
 {
     value.serialize(Serializer)
 }
@@ -1187,8 +1184,8 @@ where
 
 #[cfg(test)]
 mod test {
-    use super::Value;
     use super::super::de::from_str;
+    use super::Value;
 
     #[test]
     fn number_deserialize() {
