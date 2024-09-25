@@ -13,16 +13,15 @@ use std::io::prelude::*;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-#[derive(clap::Parser, Clone, Debug)]
-#[group(id = "formatting", required = false, multiple = false)]
+#[derive(Parser)]
 /// Hjson, the Human JSON.
 pub struct HJson {
     /// Output as formatted json
-    #[arg(short = 'j', action, group = "formatting")]
+    #[arg(short = 'j', group = "formatting")]
     as_formatted_json: bool,
 
     /// Output as json
-    #[arg(short = 'c', action, group = "formatting")]
+    #[arg(short = 'c', group = "formatting")]
     as_json: bool,
 
     /// If specified, read from this file, otherwise read from stdin
