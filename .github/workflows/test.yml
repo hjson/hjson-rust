@@ -42,7 +42,12 @@ jobs:
           toolchain: ${{ matrix.rust }}
       - run: cd hjson && cargo build --release
       - if: matrix.rust != '1.65.0'
-        run: cd hjson_cli && cargo build --release
+        run: |
+          cd hjson_cli &&
+          cargo build --release &&
+          diff ../hjson_tests/assets/trail_result.hjson <(../target/debug/hjson ../hjson_tests/assets/trail_result.json) &&
+          diff ../hjson_tests/assets/trail_result.json <(../target/debug/hjson -j ../hjson_tests/assets/trail_test.hjson) &&
+          diff ../hjson_tests/assets/simplenumber_result.json <(../target/debug/hjson -c ../hjson_tests/assets/simplenumber_test.hjson)
       - run: |
           if [ '${{ matrix.rust }}' == '1.65.0' ]; then
             # because of 'clap_derive' it needs Rust 1.74+
