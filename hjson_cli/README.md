@@ -24,11 +24,11 @@
 }
 ```
 
-# Install
+## Install
 
 Install with `cargo install hjson`
 
-# Usage
+## Usage
 
 ```
 Hjson, the Human JSON.
