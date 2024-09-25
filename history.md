@@ -1,5 +1,9 @@
 # hjson-rust History
 
+- v1.1.0
+  - edition 2021
+  - minimum supported Rust version: 1.65
+  - fixes bug preventing use of -j or -c for the CLI tool
 - v1.0.0
   - stable
 - v0.10.0
